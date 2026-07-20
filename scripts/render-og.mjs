@@ -81,7 +81,7 @@ const html = `<!doctype html>
     </svg>
     <div class="copy">
       <div class="brand">補亦樂乎</div>
-      <div class="sub">台中補習班地圖・立案核查・家長評價</div>
+      <div class="sub">台中補習班地圖・公開資訊・家長評價</div>
       <div class="bar"></div>
     </div>
   </div>

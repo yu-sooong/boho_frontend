@@ -19,7 +19,7 @@ import { computed, nextTick, onMounted, ref, watch } from 'vue'
 import { useRouter } from 'vue-router'
 
 usePageSeo({
-  title: '補亦樂乎 | 台中市補習班地圖查詢・立案核查・家長評價',
+  title: '補亦樂乎 | 台中市補習班地圖查詢・公開資訊・家長評價',
   description:
     '免費查詢台中市近 3,000 間立案補習班，地圖找班、立案狀態核查、稽查紀錄查詢、真實家長評價，報名前先查，讓孩子上到有保障的補習班。',
   ogTitle: '補亦樂乎 | 台中市補習班地圖查詢',
