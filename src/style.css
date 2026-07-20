@@ -1,0 +1,220 @@
+@import 'tailwindcss';
+@config '../tailwind.config.js';
+
+:root {
+  --font-heading: 'Noto Sans TC', 'Inter', sans-serif;
+  --font-body: -apple-system, BlinkMacSystemFont, 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+  --font-mono-number: 'Inter', sans-serif;
+}
+
+html,
+body {
+  font-family: var(--font-body);
+  -webkit-tap-highlight-color: transparent;
+}
+
+.font-heading {
+  font-family: var(--font-heading);
+}
+
+/* Skeleton 頁面淡入淡出切換 */
+.fade-enter-active { transition: opacity 0.25s ease; }
+.fade-leave-active { transition: opacity 0.15s ease; }
+.fade-enter-from,
+.fade-leave-to     { opacity: 0; }
+
+/* 隱藏 scrollbar 但保留可捲動性，用於水平篩選標籤列 */
+.scrollbar-none::-webkit-scrollbar {
+  display: none;
+}
+.scrollbar-none {
+  scrollbar-width: none;
+}
+
+/* 首頁導覽（driver.js）— 質感卡片 + logo 伴遊 */
+.buyu-tour-popover.driver-popover {
+  background: linear-gradient(180deg, #ffffff 0%, #f8faf9 100%);
+  color: #111827;
+  border-radius: 1.125rem;
+  border: 1px solid #d1e7e3;
+  box-shadow:
+    0 1px 0 rgba(255, 255, 255, 0.8) inset,
+    0 12px 36px rgba(15, 61, 52, 0.14);
+  max-width: 300px;
+  padding: 18px 16px 14px;
+}
+
+.buyu-tour-popover .driver-popover-title {
+  font-family: var(--font-heading);
+  font-size: 1rem;
+  font-weight: 700;
+  letter-spacing: 0.01em;
+  color: #134e4a;
+  margin: 0 40px 8px 0;
+}
+
+.buyu-tour-popover .driver-popover-description {
+  font-size: 0.8125rem;
+  line-height: 1.6;
+  color: #4b5563;
+  margin: 0;
+}
+
+.buyu-tour-popover .driver-popover-progress-text {
+  font-size: 0.6875rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  color: #0f766e;
+  background: #f0fdfa;
+  border-radius: 999px;
+  padding: 0.2rem 0.55rem;
+}
+
+.buyu-tour-popover .driver-popover-footer {
+  margin-top: 16px;
+  align-items: center;
+  gap: 8px;
+}
+
+.buyu-tour-popover .driver-popover-navigation-btns {
+  gap: 8px;
+}
+
+.buyu-tour-popover .driver-popover-next-btn,
+.buyu-tour-popover .driver-popover-prev-btn {
+  border-radius: 0.65rem;
+  font-size: 0.8125rem;
+  font-weight: 600;
+  text-shadow: none;
+  min-height: 2.25rem;
+  padding: 0.45rem 1rem;
+  letter-spacing: 0.01em;
+}
+
+.buyu-tour-popover .driver-popover-next-btn {
+  background: #0f766e;
+  color: #fff !important;
+  border: 1px solid #0f766e;
+  text-shadow: none;
+  box-shadow: 0 2px 8px rgba(15, 118, 110, 0.28);
+}
+
+.buyu-tour-popover .driver-popover-next-btn:hover,
+.buyu-tour-popover .driver-popover-next-btn:focus {
+  background: #0d9488;
+  border-color: #0d9488;
+  color: #fff !important;
+}
+
+.buyu-tour-popover .driver-popover-prev-btn {
+  background: #fff;
+  color: #6b7280 !important;
+  border: 1px solid #e5e7eb;
+  text-shadow: none;
+}
+
+.buyu-tour-popover .driver-popover-prev-btn:hover {
+  background: #f9fafb;
+  color: #374151 !important;
+}
+
+/* 略過：文字鈕，取代預設大 X */
+.buyu-tour-popover .driver-popover-close-btn {
+  position: absolute;
+  top: 12px;
+  right: 12px;
+  width: auto;
+  height: auto;
+  min-height: 1.75rem;
+  padding: 0.25rem 0.5rem;
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: #9ca3af;
+  background: transparent;
+  border: none;
+  border-radius: 0.4rem;
+  line-height: 1.2;
+}
+
+.buyu-tour-popover .driver-popover-close-btn:hover {
+  color: #4b5563;
+  background: #f3f4f6;
+}
+
+.buyu-tour-popover .driver-popover-arrow-side-left.driver-popover-arrow,
+.buyu-tour-popover .driver-popover-arrow-side-right.driver-popover-arrow,
+.buyu-tour-popover .driver-popover-arrow-side-top.driver-popover-arrow,
+.buyu-tour-popover .driver-popover-arrow-side-bottom.driver-popover-arrow {
+  border-width: 7px;
+}
+
+/* 會飛的 logo 伴遊（無聲、不另取名） */
+.buyu-tour-sprout {
+  position: fixed;
+  left: 50%;
+  top: 40%;
+  z-index: 1000001;
+  width: 52px;
+  height: 52px;
+  margin: 0;
+  padding: 7px;
+  border-radius: 999px;
+  background: linear-gradient(160deg, #ffffff 0%, #f0fdfa 100%);
+  border: 1px solid #99f6e4;
+  box-shadow:
+    0 2px 0 rgba(255, 255, 255, 0.9) inset,
+    0 8px 22px rgba(15, 118, 110, 0.22);
+  pointer-events: none;
+  opacity: 0;
+  transform: translate(-50%, -50%) scale(0.7);
+  transition:
+    left 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    top 0.55s cubic-bezier(0.22, 1, 0.36, 1),
+    opacity 0.25s ease,
+    transform 0.35s cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.buyu-tour-sprout.is-visible {
+  opacity: 1;
+  transform: none;
+}
+
+.buyu-tour-sprout svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.buyu-tour-sprout .tour-sprout-sway {
+  animation: buyu-sprout-sway 2.2s ease-in-out infinite;
+}
+
+.buyu-tour-sprout .tour-leaf-l {
+  animation: buyu-leaf-l 2.2s ease-in-out 0.1s infinite;
+  transform-box: fill-box;
+  transform-origin: right bottom;
+}
+
+.buyu-tour-sprout .tour-leaf-r {
+  animation: buyu-leaf-r 2.2s ease-in-out 0.2s infinite;
+  transform-box: fill-box;
+  transform-origin: left bottom;
+}
+
+@keyframes buyu-sprout-sway {
+  0%, 100% { transform: rotate(0deg) translateY(0); }
+  25% { transform: rotate(7deg) translateY(-2px); }
+  55% { transform: rotate(-5deg) translateY(-1px); }
+  80% { transform: rotate(3deg) translateY(-2px); }
+}
+
+@keyframes buyu-leaf-l {
+  0%, 100% { transform: rotate(0deg); }
+  40% { transform: rotate(-8deg); }
+}
+
+@keyframes buyu-leaf-r {
+  0%, 100% { transform: rotate(0deg); }
+  45% { transform: rotate(8deg); }
+}

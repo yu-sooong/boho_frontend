@@ -1,0 +1,7 @@
+node_modules/
+temp/
+out/
+dist/
+.remotion/
+*.log
+public/recorded.mp4

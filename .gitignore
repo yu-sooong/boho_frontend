@@ -1,0 +1,46 @@
+# Dependencies & build
+node_modules/
+dist/
+dist-ssr/
+coverage/
+*.tsbuildinfo
+*.local
+
+# Env / secrets
+.env
+.env.*
+!.env.example
+
+# Logs & OS
+*.log
+npm-debug.log*
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea/
+.vscode/*
+!.vscode/extensions.json
+*.swp
+.cursor/
+
+# Playwright
+test-results/
+playwright-report/
+blob-report/
+playwright/.cache/
+
+# Remotion / reels — keep source, skip deps & rendered media
+reels/node_modules/
+reels/out/
+reels/temp/
+reels/public/**
+!reels/public/.gitkeep
+scripts/reels-stage/**/*.webm
+scripts/reels-stage/**/*.mp4
+scripts/reels-stage/**/*.png
+scripts/reels-stage/**/*.jpg
+
+# Large binary mockups if ever copied under frontend
+**/*.psd
+**/*.ai

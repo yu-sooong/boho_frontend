@@ -1,0 +1,337 @@
+<!doctype html>
+<html lang="zh-Hant">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>補亦樂乎 · Reels Stage</title>
+    <style>
+      :root {
+        --dur: 48s;
+        --bg0: #071512;
+        --bg1: #0f2f2a;
+        --accent: #0f766e;
+        --glow: rgba(45, 212, 191, 0.22);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      html,
+      body {
+        width: 1080px;
+        height: 1920px;
+        overflow: hidden;
+        background: var(--bg0);
+        font-family: 'PingFang TC', 'Noto Sans TC', 'Helvetica Neue', sans-serif;
+        color: #f8fafc;
+      }
+
+      .stage {
+        position: relative;
+        width: 1080px;
+        height: 1920px;
+        perspective: 1600px;
+        perspective-origin: 50% 42%;
+        overflow: hidden;
+        background:
+          radial-gradient(ellipse 80% 55% at 50% 38%, var(--glow), transparent 62%),
+          radial-gradient(ellipse 120% 80% at 50% 100%, rgba(15, 118, 110, 0.35), transparent 55%),
+          linear-gradient(165deg, var(--bg1) 0%, var(--bg0) 48%, #050a09 100%);
+      }
+
+      .stage::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background-image: radial-gradient(rgba(255, 255, 255, 0.045) 0.7px, transparent 0.7px);
+        background-size: 4px 4px;
+        opacity: 0.35;
+        pointer-events: none;
+      }
+
+      .floor-glow {
+        position: absolute;
+        left: 50%;
+        bottom: 12%;
+        width: 520px;
+        height: 120px;
+        transform: translateX(-50%);
+        background: radial-gradient(ellipse, rgba(15, 118, 110, 0.45), transparent 70%);
+        filter: blur(8px);
+        animation: floorPulse var(--dur) ease-in-out forwards;
+      }
+
+      .rig {
+        position: absolute;
+        left: 50%;
+        top: 46%;
+        width: 560px;
+        height: 1140px;
+        margin-left: -280px;
+        margin-top: -570px;
+        transform-style: preserve-3d;
+        animation: keynoteCam var(--dur) cubic-bezier(0.4, 0.05, 0.2, 1) forwards;
+      }
+
+      .phone {
+        position: relative;
+        width: 100%;
+        height: 100%;
+        transform-style: preserve-3d;
+        border-radius: 72px;
+        background: linear-gradient(145deg, #2a2f33 0%, #0b0d0f 40%, #1a1e22 100%);
+        box-shadow:
+          0 40px 100px rgba(0, 0, 0, 0.55),
+          0 0 0 1px rgba(255, 255, 255, 0.08) inset,
+          0 2px 0 rgba(255, 255, 255, 0.12) inset;
+      }
+
+      .phone-edge {
+        position: absolute;
+        inset: 0;
+        border-radius: 72px;
+        transform: translateZ(-14px);
+        background: linear-gradient(180deg, #3a4046, #111);
+        box-shadow: 0 0 0 2px #050505;
+      }
+
+      .bezel {
+        position: absolute;
+        inset: 14px;
+        border-radius: 58px;
+        background: #050505;
+        overflow: hidden;
+        transform: translateZ(1px);
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06);
+      }
+
+      .island {
+        position: absolute;
+        top: 18px;
+        left: 50%;
+        width: 126px;
+        height: 34px;
+        margin-left: -63px;
+        border-radius: 20px;
+        background: #000;
+        z-index: 3;
+        box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.04);
+      }
+
+      .screen {
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        background: #0a0a0a;
+      }
+
+      .glass {
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(
+          125deg,
+          rgba(255, 255, 255, 0.14) 0%,
+          transparent 28%,
+          transparent 62%,
+          rgba(255, 255, 255, 0.04) 100%
+        );
+        pointer-events: none;
+        mix-blend-mode: screen;
+        opacity: 0.55;
+        animation: glassSweep var(--dur) ease-in-out forwards;
+      }
+
+      .caption {
+        position: absolute;
+        left: 0;
+        right: 0;
+        text-align: center;
+        pointer-events: none;
+        z-index: 5;
+        opacity: 0;
+      }
+
+      .caption-top {
+        top: 7.5%;
+        animation: capTop var(--dur) ease-in-out forwards;
+      }
+
+      .caption-bottom {
+        bottom: 6.5%;
+        animation: capBottom var(--dur) ease-in-out forwards;
+      }
+
+      .caption .eyebrow {
+        font-size: 22px;
+        letter-spacing: 0.28em;
+        text-indent: 0.28em;
+        color: rgba(153, 246, 228, 0.85);
+        font-weight: 500;
+        margin-bottom: 14px;
+      }
+
+      .caption .title {
+        font-size: 54px;
+        font-weight: 700;
+        letter-spacing: -0.02em;
+        line-height: 1.2;
+        text-shadow: 0 8px 40px rgba(0, 0, 0, 0.45);
+      }
+
+      .caption .sub {
+        margin-top: 14px;
+        font-size: 28px;
+        color: rgba(226, 232, 240, 0.78);
+        font-weight: 400;
+      }
+
+      /* 蘋果風鏡頭：旋轉進場 → 正視導覽 → 側轉地圖 → 推近特寫 → 拉遠品牌 */
+      @keyframes keynoteCam {
+        0% {
+          transform: translate3d(0, 40px, -280px) rotateY(-42deg) rotateX(16deg) scale(0.72);
+        }
+        8% {
+          transform: translate3d(0, 10px, -80px) rotateY(-22deg) rotateX(10deg) scale(0.86);
+        }
+        18% {
+          transform: translate3d(0, 0, 0) rotateY(-6deg) rotateX(3deg) scale(0.96);
+        }
+        32% {
+          transform: translate3d(0, 0, 40px) rotateY(0deg) rotateX(0deg) scale(1);
+        }
+        48% {
+          transform: translate3d(18px, -10px, 20px) rotateY(16deg) rotateX(4deg) scale(1.02);
+        }
+        62% {
+          transform: translate3d(-10px, -20px, 80px) rotateY(-8deg) rotateX(2deg) scale(1.08);
+        }
+        78% {
+          transform: translate3d(0, -36px, 160px) rotateY(0deg) rotateX(0deg) scale(1.22);
+        }
+        90% {
+          transform: translate3d(0, -20px, 60px) rotateY(-10deg) rotateX(3deg) scale(1.06);
+        }
+        100% {
+          transform: translate3d(0, 0, -40px) rotateY(18deg) rotateX(8deg) scale(0.92);
+        }
+      }
+
+      @keyframes floorPulse {
+        0%,
+        100% {
+          opacity: 0.35;
+          transform: translateX(-50%) scale(0.85);
+        }
+        50% {
+          opacity: 0.7;
+          transform: translateX(-50%) scale(1.05);
+        }
+      }
+
+      @keyframes glassSweep {
+        0%,
+        100% {
+          opacity: 0.35;
+        }
+        40%,
+        70% {
+          opacity: 0.65;
+        }
+      }
+
+      @keyframes capTop {
+        0%,
+        4% {
+          opacity: 0;
+          transform: translateY(16px);
+        }
+        8%,
+        22% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        28%,
+        100% {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+
+      @keyframes capBottom {
+        0%,
+        72% {
+          opacity: 0;
+          transform: translateY(20px);
+        }
+        80%,
+        92% {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        100% {
+          opacity: 0.9;
+          transform: translateY(0);
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="stage">
+      <div class="floor-glow" aria-hidden="true"></div>
+
+      <div class="caption caption-top">
+        <div class="eyebrow">BUYU</div>
+        <div class="title">報名前，先查清楚</div>
+        <div class="sub">立案 · 地圖 · 家長評價</div>
+      </div>
+
+      <div class="rig">
+        <div class="phone">
+          <div class="phone-edge" aria-hidden="true"></div>
+          <div class="bezel">
+            <div class="island" aria-hidden="true"></div>
+            <video id="screen" class="screen" muted playsinline preload="auto"></video>
+            <div class="glass" aria-hidden="true"></div>
+          </div>
+        </div>
+      </div>
+
+      <div class="caption caption-bottom">
+        <div class="eyebrow">台中補習班情報</div>
+        <div class="title">補亦樂乎</div>
+        <div class="sub">boho.yujii.app</div>
+      </div>
+    </div>
+
+    <script>
+      const params = new URLSearchParams(location.search)
+      const src = params.get('src') || './screen.webm'
+      const video = document.getElementById('screen')
+      video.src = src
+
+      function markDone() {
+        document.body.dataset.done = '1'
+      }
+
+      video.addEventListener('loadedmetadata', () => {
+        const dur = Math.max(video.duration || 48, 1)
+        document.documentElement.style.setProperty('--dur', dur + 's')
+        // 等一幀讓 CSS animation 吃到新 duration
+        requestAnimationFrame(() => {
+          void video.play().catch(() => markDone())
+        })
+      })
+
+      video.addEventListener('ended', markDone)
+      video.addEventListener('error', markDone)
+
+      // 保險：避免卡住
+      setTimeout(markDone, 90_000)
+    </script>
+  </body>
+</html>
