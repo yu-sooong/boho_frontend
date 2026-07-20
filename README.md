@@ -15,7 +15,7 @@ npm run dev
 - Build：`npm run build`
 - Output：`dist`
 - 環境變數：
-  - `VITE_API_BASE=https://api.boho.yujii.app/api`
+  - `VITE_API_BASE=https://api.yujii.app/api`
   - `VITE_SITE_URL=https://boho.yujii.app`
   - `VITE_CONTACT_EMAIL=yujiiii543@gmail.com`
 
