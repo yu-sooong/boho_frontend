@@ -29,11 +29,32 @@ defineExpose({ fitToSchools, flyToUser })
 
 const container = ref<HTMLDivElement | null>(null)
 const geo = useGeolocation()
+const mapFailed = ref(false)
+const mapFailReason = ref('此裝置無法顯示互動地圖')
 let map: maplibregl.Map | null = null
 let resizeObserver: ResizeObserver | null = null
 let userMarker: maplibregl.Marker | null = null
 let hoverPopup: maplibregl.Popup | null = null
 let lastUserCoords: [number, number] | null = null
+
+function markMapFailed(reason?: string) {
+  mapFailed.value = true
+  if (reason) mapFailReason.value = reason
+  try {
+    map?.remove()
+  } catch {
+    /* ignore */
+  }
+  map = null
+  emit('ready')
+}
+
+function googleMapsUrl(school: School): string {
+  if (school.lng && school.lat) {
+    return `https://www.google.com/maps/search/?api=1&query=${school.lat},${school.lng}`
+  }
+  return `https://www.google.com/maps/search/?api=1&query=${encodeURIComponent(school.address || school.name)}`
+}
 
 // ── 類別顏色定義 ─────────────────────────────────────────────────────────────
 
@@ -397,49 +418,65 @@ onMounted(() => {
     initZoom = props.interactive ? 15 : 16
   }
 
-  map = new maplibregl.Map({
-    container: container.value,
-    style: BASEMAP_STYLE,
-    center: initCenter,
-    zoom: initZoom,
-    minZoom: MAP_MIN_ZOOM,
-    maxZoom: MAP_MAX_ZOOM,
-    maxBounds: TAICHUNG_MAX_BOUNDS,
-    renderWorldCopies: false,
-    attributionControl: false,
-    interactive: props.interactive,
-  })
+  try {
+    map = new maplibregl.Map({
+      container: container.value,
+      style: BASEMAP_STYLE,
+      center: initCenter,
+      zoom: initZoom,
+      minZoom: MAP_MIN_ZOOM,
+      maxZoom: MAP_MAX_ZOOM,
+      maxBounds: TAICHUNG_MAX_BOUNDS,
+      renderWorldCopies: false,
+      attributionControl: false,
+      interactive: props.interactive,
+    })
+  } catch (err) {
+    markMapFailed(err instanceof Error ? err.message : '無法初始化地圖')
+    return
+  }
 
   map.addControl(new maplibregl.AttributionControl({ compact: true }))
 
-  map.on('load', async () => {
-    if (!map) return
-
-    // 先載入所有 pin 圖示，再建圖層
-    await loadAllPinImages(map)
-
-    map.addSource('schools', {
-      type: 'geojson',
-      data: toGeoJSON(props.schools),
-      cluster: true,
-      clusterMaxZoom: 14,
-      clusterRadius: 40,
-    })
-    addLayers()
-    setupEvents()
-    updateSelectedFilter()
-
-    // 已有定位：只放標記，不飛走（避免從詳情頁返回時蓋掉篩選視角）
-    // 尚未定位：首次自動定位並飛到附近
-    if (props.interactive) {
-      if (props.userLat != null && props.userLng != null) {
-        placeUserMarker(props.userLng, props.userLat)
-      } else {
-        setTimeout(() => onLocate(true), 600)
-      }
+  map.on('error', (e) => {
+    const msg = e.error?.message ?? String(e.error ?? '')
+    if (/webgl|WebGL|Failed to initialize/i.test(msg)) {
+      markMapFailed('此瀏覽器不支援 WebGL 地圖')
     }
+  })
 
-    emit('ready')
+  map.on('load', async () => {
+    if (!map || mapFailed.value) return
+
+    try {
+      // 先載入所有 pin 圖示，再建圖層
+      await loadAllPinImages(map)
+
+      map.addSource('schools', {
+        type: 'geojson',
+        data: toGeoJSON(props.schools),
+        cluster: true,
+        clusterMaxZoom: 14,
+        clusterRadius: 40,
+      })
+      addLayers()
+      setupEvents()
+      updateSelectedFilter()
+
+      // 已有定位：只放標記，不飛走（避免從詳情頁返回時蓋掉篩選視角）
+      // 尚未定位：首次自動定位並飛到附近
+      if (props.interactive) {
+        if (props.userLat != null && props.userLng != null) {
+          placeUserMarker(props.userLng, props.userLat)
+        } else {
+          setTimeout(() => onLocate(true), 600)
+        }
+      }
+
+      emit('ready')
+    } catch (err) {
+      markMapFailed(err instanceof Error ? err.message : '地圖圖層載入失敗')
+    }
   })
 
   resizeObserver = new ResizeObserver(() => map?.resize())
@@ -460,11 +497,35 @@ watch(() => props.selectedId, updateSelectedFilter)
 
 <template>
   <div class="relative h-full w-full bg-[#f4f2ea]">
-    <div ref="container" class="absolute inset-0 h-full w-full" />
+    <div
+      v-show="!mapFailed"
+      ref="container"
+      class="absolute inset-0 h-full w-full"
+    />
+
+    <div
+      v-if="mapFailed"
+      class="absolute inset-0 flex flex-col items-center justify-center gap-3 px-6 text-center"
+      role="status"
+    >
+      <p class="text-sm font-medium text-gray-800">地圖暫時無法顯示</p>
+      <p class="max-w-xs text-xs leading-relaxed text-gray-500">
+        {{ mapFailReason }}。列表與詳情仍可正常使用，也可改用 Google 地圖查看位置。
+      </p>
+      <a
+        v-if="schools[0]"
+        :href="googleMapsUrl(schools[0])"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="rounded-md bg-primary-700 px-3 py-2 text-xs font-medium text-white hover:bg-primary-800"
+      >
+        在 Google 地圖開啟
+      </a>
+    </div>
 
     <!-- 定位按鈕 -->
     <button
-      v-if="interactive"
+      v-if="interactive && !mapFailed"
       type="button"
       class="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-gray-50 disabled:opacity-50"
       :disabled="geo.isLoading.value"
@@ -478,7 +539,7 @@ watch(() => props.selectedId, updateSelectedFilter)
 
     <!-- 類別顏色圖例（桌面才顯示） -->
     <div
-      v-if="interactive && schools.length > 0"
+      v-if="interactive && !mapFailed && schools.length > 0"
       class="pointer-events-none absolute bottom-6 left-2 z-10 hidden rounded-lg bg-white/92 px-2.5 py-2 text-[10px] text-gray-600 shadow backdrop-blur-sm md:block"
     >
       <div

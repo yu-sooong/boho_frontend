@@ -40,8 +40,12 @@ export interface School {
   reviewTags: string[]
   reviews: Review[]
   penalties: PenaltyRecord[]
+  /** 列表摘要的稽查筆數（詳情載入前可用） */
+  penaltyCount?: number
   lng: number
   lat: number
+  /** 是否已從 GET /schools/:id 取得完整詳情（含 penalties） */
+  detailLoaded?: boolean
 }
 
 export interface DistrictStat {

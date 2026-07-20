@@ -2,7 +2,7 @@ import { defineStore } from 'pinia'
 import { computed, ref, watch } from 'vue'
 import { ApiError } from '@/api/client'
 import { getAllSchools, getSchoolDetail } from '@/api/schools'
-import type { ApiSchoolDetail, ApiSchoolSummary } from '@/api/types'
+import type { ApiSchoolDetail, ApiSchoolListItem } from '@/api/types'
 import type { PenaltyRecord, School } from '@/types'
 import { isMongoObjectId } from '@/utils/objectId'
 
@@ -37,31 +37,39 @@ function haversineM(lat1: number, lng1: number, lat2: number, lng2: number): num
 
 // ── 型別轉換：API → 前端 view model ──────────────────────────────────────────
 
-function statusLabel(s: ApiSchoolSummary['status']): School['status'] {
-  return s === 'active' ? '立案中' : '已廢止'
+function statusLabel(s: ApiSchoolDetail['status'] | undefined): School['status'] {
+  return s === 'closed' || s === 'revoked' ? '已廢止' : '立案中'
 }
 
-function summaryToSchool(s: ApiSchoolSummary): School {
-  const [lng, lat] = s.location?.coordinates ?? [0, 0]
-  const validCoords = s.location != null && isInTaiwan(lng, lat)
+function coordsFromListItem(s: ApiSchoolListItem): { lng: number; lat: number } {
+  if (s.lng != null && s.lat != null && isInTaiwan(s.lng, s.lat)) {
+    return { lng: s.lng, lat: s.lat }
+  }
+  return { lng: 0, lat: 0 }
+}
+
+function listItemToSchool(s: ApiSchoolListItem): School {
+  const { lng, lat } = coordsFromListItem(s)
   return {
     id: s.id,
     name: s.name,
     address: s.address,
     district: s.district ?? '',
     phone: s.phone ?? '',
-    distanceKm: 0,           // 由 sortedSchools computed 動態計算
+    distanceKm: 0,
     categoryTags: s.categories ?? [],
     levelTags: [],
     extraTags: [],
-    status: statusLabel(s.status),
+    status: '立案中',
     rating: 0,
     reviewCount: 0,
     reviewTags: [],
     reviews: [],
     penalties: [],
-    lng: validCoords ? lng : 0,
-    lat: validCoords ? lat : 0,
+    penaltyCount: s.penaltyCount ?? 0,
+    lng,
+    lat,
+    detailLoaded: false,
   }
 }
 
@@ -91,8 +99,10 @@ function detailToSchool(s: ApiSchoolDetail): School {
     reviewTags: [],
     reviews: [],
     penalties,
+    penaltyCount: penalties.length,
     lng: validCoords ? lng : 0,
     lat: validCoords ? lat : 0,
+    detailLoaded: true,
   }
 }
 
@@ -217,6 +227,19 @@ export const useSchoolStore = defineStore('school', () => {
 
   // ── Actions ───────────────────────────────────────────────────────────────────
 
+  function putCache(school: School) {
+    schoolCache.value.set(school.id, school)
+    const idx = allSchools.value.findIndex((s) => s.id === school.id)
+    if (idx >= 0) {
+      const prev = allSchools.value[idx]
+      allSchools.value[idx] = {
+        ...school,
+        // 保留列表側可能已算好的距離
+        distanceKm: prev.distanceKm,
+      }
+    }
+  }
+
   /** 一次載入所有學校（帶 Redis 72h cache，通常只打一次 API） */
   async function loadAll() {
     if (allSchools.value.length > 0) return   // 已載入，直接略過
@@ -224,8 +247,8 @@ export const useSchoolStore = defineStore('school', () => {
     loadError.value = null
     try {
       const result = await getAllSchools()
-      allSchools.value = result.data.map(summaryToSchool)
-      // 填入快取
+      allSchools.value = result.data.map(listItemToSchool)
+      // 僅作列表／地圖快取；不可當作 detailLoaded
       allSchools.value.forEach((s) => schoolCache.value.set(s.id, s))
     } catch (e) {
       loadError.value = e instanceof Error ? e.message : '載入失敗，請稍後再試'
@@ -245,19 +268,28 @@ export const useSchoolStore = defineStore('school', () => {
 
   async function fetchDetail(id: string): Promise<School> {
     const cached = schoolCache.value.get(id)
-    if (cached) return cached
+    if (cached?.detailLoaded) return cached
     const detail = await getSchoolDetail(id)
     const school = detailToSchool(detail)
-    schoolCache.value.set(id, school)
+    putCache(school)
     return school
   }
 
   async function loadDetail(id: string) {
-    if (currentDetail.value?.id === id && !detailNotFound.value) return
+    if (
+      currentDetail.value?.id === id &&
+      currentDetail.value.detailLoaded &&
+      !detailNotFound.value
+    ) {
+      return
+    }
     isLoadingDetail.value = true
     detailError.value = null
     detailNotFound.value = false
-    currentDetail.value = null
+
+    // 先顯示列表摘要（若有），避免空白閃爍；仍會打 detail API
+    const preview = schoolCache.value.get(id)
+    currentDetail.value = preview && !preview.detailLoaded ? preview : null
 
     if (!isMongoObjectId(id)) {
       detailNotFound.value = true
@@ -270,6 +302,7 @@ export const useSchoolStore = defineStore('school', () => {
     } catch (e) {
       if (e instanceof ApiError && (e.status === 400 || e.status === 404)) {
         detailNotFound.value = true
+        currentDetail.value = null
       } else {
         detailError.value = e instanceof Error ? e.message : '載入失敗，請稍後再試'
       }
@@ -328,7 +361,6 @@ export const useSchoolStore = defineStore('school', () => {
   function setUserCoords(lat: number, lng: number) {
     userLat.value = lat
     userLng.value = lng
-    // 不需要重新打 API，computed 自動 recompute
   }
 
   function getCached(id: string): School | undefined {

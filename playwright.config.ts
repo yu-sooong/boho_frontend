@@ -52,5 +52,21 @@ export default defineConfig({
       outputDir: './test-results/reels',
       timeout: 120_000,
     },
+    {
+      name: 'remote-qa',
+      use: {
+        browserName: 'chromium',
+        baseURL:
+          process.env.PLAYWRIGHT_BASE_URL ?? 'https://boho-frontend.sscode543.workers.dev',
+        viewport: { width: 1280, height: 800 },
+        locale: 'zh-TW',
+        geolocation: { latitude: 24.1477, longitude: 120.6736 },
+        permissions: ['geolocation'],
+        screenshot: 'only-on-failure',
+        trace: 'retain-on-failure',
+      },
+      testMatch: /remote-qa-monkey\.spec\.ts/,
+      timeout: 120_000,
+    },
   ],
 })

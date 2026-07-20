@@ -27,6 +27,20 @@ export interface ApiSchoolSummary {
   distanceM?: number // 附近搜尋才有
 }
 
+/** GET /schools/all 精簡列（座標用 lng/lat；status 固定 active 故省略） */
+export interface ApiSchoolListItem {
+  id: string
+  name: string
+  categories: string[]
+  address: string
+  district: string
+  phone?: string
+  lng?: number
+  lat?: number
+  /** 僅 >0 時後端才回傳 */
+  penaltyCount?: number
+}
+
 export interface ApiSchoolDetail {
   id: string
   name: string

@@ -2,8 +2,8 @@ import { apiGet } from './client'
 import type {
   ApiMapResult,
   ApiSchoolDetail,
+  ApiSchoolListItem,
   ApiSearchResult,
-  ApiSchoolSummary,
 } from './types'
 
 export interface SearchParams {
@@ -55,7 +55,7 @@ export function getCategories() {
   return apiGet<{ data: string[]; fromCache?: boolean }>('/schools/categories')
 }
 
-/** 一次載入所有活躍學校（前端做篩選/排序/距離計算） */
+/** 一次載入所有活躍學校精簡列（前端做篩選/排序/距離計算） */
 export function getAllSchools() {
-  return apiGet<{ data: ApiSchoolSummary[]; total: number; fromCache?: boolean }>('/schools/all')
+  return apiGet<{ data: ApiSchoolListItem[]; total: number; fromCache?: boolean }>('/schools/all')
 }
