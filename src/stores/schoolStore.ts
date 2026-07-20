@@ -8,7 +8,6 @@ import { isMongoObjectId } from '@/utils/objectId'
 
 // ── 常數 ──────────────────────────────────────────────────────────────────────
 
-const TAICHUNG_CENTER = { lng: 120.6469, lat: 24.1697 }
 const DISPLAY_STEP = 20
 
 /** 台灣合理座標範圍（含離島），過濾 Geocoding 異常資料 */

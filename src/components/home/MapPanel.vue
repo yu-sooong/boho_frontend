@@ -145,7 +145,21 @@ const BASEMAP_STYLE: maplibregl.StyleSpecification = {
 
 // ── GeoJSON ──────────────────────────────────────────────────────────────────
 
-function toGeoJSON(schools: School[]): GeoJSON.FeatureCollection {
+type SchoolFeatureCollection = {
+  type: 'FeatureCollection'
+  features: Array<{
+    type: 'Feature'
+    properties: {
+      id: string
+      name: string
+      categories: string
+      pinImage: string
+    }
+    geometry: { type: 'Point'; coordinates: [number, number] }
+  }>
+}
+
+function toGeoJSON(schools: School[]): SchoolFeatureCollection {
   return {
     type: 'FeatureCollection',
     features: schools
@@ -158,7 +172,7 @@ function toGeoJSON(schools: School[]): GeoJSON.FeatureCollection {
           categories: s.categoryTags.join('・'),
           pinImage: pinImageName(categoryColor(s.categoryTags)),
         },
-        geometry: { type: 'Point' as const, coordinates: [s.lng, s.lat] },
+        geometry: { type: 'Point' as const, coordinates: [s.lng, s.lat] as [number, number] },
       })),
   }
 }
@@ -248,10 +262,11 @@ function setupEvents() {
     if (!features?.length) return
     const clusterId = features[0].properties?.cluster_id as number
     const source = map?.getSource('schools') as GeoJSONSource
-    source.getClusterExpansionZoom(clusterId, (err, zoom) => {
-      if (err || !zoom) return
+    const geometry = features[0].geometry
+    if (geometry.type !== 'Point') return
+    void source.getClusterExpansionZoom(clusterId).then((zoom) => {
       map?.flyTo({
-        center: (features[0].geometry as GeoJSON.Point).coordinates as [number, number],
+        center: geometry.coordinates as [number, number],
         zoom: zoom + 0.5,
         duration: 400,
       })

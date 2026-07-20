@@ -78,7 +78,6 @@ function buildSteps(opts: {
       popover: {
         title: '歡迎使用補亦樂乎',
         description: '用地圖與列表查台中立案補習班、稽查紀錄與家長評價。接下來用 4 步認識首頁。',
-        side: 'over',
         align: 'center',
       },
     },
