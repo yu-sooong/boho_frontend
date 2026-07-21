@@ -22,7 +22,7 @@ const arcs = computed(() => {
 </script>
 
 <template>
-  <svg viewBox="0 0 100 100" class="h-40 w-40 -rotate-90">
+  <svg viewBox="0 0 100 100" class="h-32 w-32 shrink-0 -rotate-90">
     <circle
       v-for="(arc, i) in arcs"
       :key="i"

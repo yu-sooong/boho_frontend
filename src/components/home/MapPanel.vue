@@ -70,7 +70,18 @@ const CATEGORY_COLORS: [string, string][] = [
   ['藝術類', '#b45309'],
 ]
 const DEFAULT_COLOR = '#374151'
-const SELECTED_COLOR = '#f59e0b'
+/** 已選取：深藍＋粗白邊，避開音樂類橘／稽查橘圈 */
+const SELECTED_COLOR = '#1d4ed8'
+const PENALTY_RING = '#d97706'
+/**
+ * 叢集：品牌 teal 單色階（只表數量）
+ * 用較深階，避免過亮搶戲、也避開灰階沉悶
+ */
+const CLUSTER_COLORS = {
+  sm: '#0d9488',
+  md: '#0f766e',
+  lg: '#115e59',
+} as const
 
 function categoryColor(categories: string[]): string {
   for (const cat of categories) {
@@ -80,8 +91,8 @@ function categoryColor(categories: string[]): string {
   return DEFAULT_COLOR
 }
 
-function pinImageName(color: string) {
-  return `pin-${color.replace('#', '')}`
+function pinImageName(color: string, hasPenalty = false) {
+  return `pin-${color.replace('#', '')}${hasPenalty ? '-p' : ''}`
 }
 
 // ── SVG Pin 圖示載入 ──────────────────────────────────────────────────────────
@@ -89,12 +100,23 @@ function pinImageName(color: string) {
 /**
  * 產生水滴形 pin SVG，以 data URL 載入為 MapLibre image
  * scale=2 對應 retina 2x，搭配 pixelRatio:2 傳給 addImage
+ * hasPenalty：外圈 amber，標示有稽查紀錄（不改科目色）
  */
-function createPinSvg(color: string, selected = false): string {
-  const stroke = selected ? `stroke="white" stroke-width="2.5"` : ''
-  const dotR = selected ? 6.5 : 5.5
+function createPinSvg(color: string, selected = false, hasPenalty = false): string {
+  const stroke = selected
+    ? `stroke="white" stroke-width="3.2"`
+    : ''
+  const outerHalo = selected
+    ? `<path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z" fill="none" stroke="#0f172a" stroke-width="1.6" opacity="0.35"/>`
+    : ''
+  const dotR = selected ? 7 : 5.5
   const dotOpacity = selected ? 1 : 0.9
+  const ring = hasPenalty
+    ? `<circle cx="14" cy="14" r="13" fill="#fff7ed" stroke="${PENALTY_RING}" stroke-width="3"/>`
+    : ''
   return `<svg xmlns="http://www.w3.org/2000/svg" width="56" height="72" viewBox="0 0 28 36">
+    ${ring}
+    ${outerHalo}
     <path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"
       fill="${color}" ${stroke}/>
     <circle cx="14" cy="14" r="${dotR}" fill="white" opacity="${dotOpacity}"/>
@@ -106,10 +128,11 @@ async function loadPinImage(
   name: string,
   color: string,
   selected = false,
+  hasPenalty = false,
 ): Promise<void> {
   if (m.hasImage(name)) return
   return new Promise((resolve, reject) => {
-    const svg = createPinSvg(color, selected)
+    const svg = createPinSvg(color, selected, hasPenalty)
     const url = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`
     const img = new Image(56, 72)
     img.onload = () => {
@@ -124,8 +147,12 @@ async function loadPinImage(
 async function loadAllPinImages(m: maplibregl.Map): Promise<void> {
   const uniqueColors = [...new Set(CATEGORY_COLORS.map(([, c]) => c)), DEFAULT_COLOR]
   await Promise.all([
-    ...uniqueColors.map((c) => loadPinImage(m, pinImageName(c), c, false)),
-    loadPinImage(m, 'pin-selected', SELECTED_COLOR, true),
+    ...uniqueColors.flatMap((c) => [
+      loadPinImage(m, pinImageName(c, false), c, false, false),
+      loadPinImage(m, pinImageName(c, true), c, false, true),
+    ]),
+    loadPinImage(m, 'pin-selected', SELECTED_COLOR, true, false),
+    loadPinImage(m, 'pin-selected-p', SELECTED_COLOR, true, true),
   ])
 }
 
@@ -175,9 +202,14 @@ type SchoolFeatureCollection = {
       name: string
       categories: string
       pinImage: string
+      hasPenalty: number
     }
     geometry: { type: 'Point'; coordinates: [number, number] }
   }>
+}
+
+function schoolHasPenalty(s: School): boolean {
+  return (s.penaltyCount ?? 0) > 0 || s.penalties.length > 0
 }
 
 function toGeoJSON(schools: School[]): SchoolFeatureCollection {
@@ -185,16 +217,20 @@ function toGeoJSON(schools: School[]): SchoolFeatureCollection {
     type: 'FeatureCollection',
     features: schools
       .filter((s) => s.lng !== 0 && s.lat !== 0)
-      .map((s) => ({
-        type: 'Feature' as const,
-        properties: {
-          id: s.id,
-          name: s.name,
-          categories: s.categoryTags.join('・'),
-          pinImage: pinImageName(categoryColor(s.categoryTags)),
-        },
-        geometry: { type: 'Point' as const, coordinates: [s.lng, s.lat] as [number, number] },
-      })),
+      .map((s) => {
+        const hasPenalty = schoolHasPenalty(s)
+        return {
+          type: 'Feature' as const,
+          properties: {
+            id: s.id,
+            name: s.name,
+            categories: s.categoryTags.join('・'),
+            pinImage: pinImageName(categoryColor(s.categoryTags), hasPenalty),
+            hasPenalty: hasPenalty ? 1 : 0,
+          },
+          geometry: { type: 'Point' as const, coordinates: [s.lng, s.lat] as [number, number] },
+        }
+      }),
   }
 }
 
@@ -210,11 +246,29 @@ function addLayers() {
     source: 'schools',
     filter: ['has', 'point_count'],
     paint: {
-      'circle-color': ['step', ['get', 'point_count'], '#0f766e', 10, '#0369a1', 50, '#7c3aed'],
+      'circle-color': [
+        'step',
+        ['get', 'point_count'],
+        CLUSTER_COLORS.sm,
+        10,
+        CLUSTER_COLORS.md,
+        50,
+        CLUSTER_COLORS.lg,
+      ],
       'circle-radius': ['step', ['get', 'point_count'], 18, 10, 24, 50, 32],
-      'circle-opacity': 0.88,
-      'circle-stroke-width': 2,
-      'circle-stroke-color': '#ffffff',
+      'circle-opacity': 0.92,
+      'circle-stroke-width': [
+        'case',
+        ['>', ['get', 'penalty_sum'], 0],
+        3,
+        2,
+      ],
+      'circle-stroke-color': [
+        'case',
+        ['>', ['get', 'penalty_sum'], 0],
+        PENALTY_RING,
+        '#ffffff',
+      ],
     },
   })
 
@@ -247,18 +301,23 @@ function addLayers() {
     paint: { 'icon-opacity': 0.95 },
   })
 
-  // 選中圖釘：amber 色，較大，白邊
+  // 選中圖釘：深藍＋粗白邊，明顯大於一般針
   map.addLayer({
     id: 'selected-point',
     type: 'symbol',
     source: 'schools',
     filter: ['==', ['get', 'id'], props.selectedId ?? ''],
     layout: {
-      'icon-image': 'pin-selected',
+      'icon-image': [
+        'case',
+        ['==', ['get', 'hasPenalty'], 1],
+        'pin-selected-p',
+        'pin-selected',
+      ],
       'icon-anchor': 'bottom',
       'icon-allow-overlap': true,
       'icon-ignore-placement': true,
-      'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.6, 14, 0.9, 16, 1.1],
+      'icon-size': ['interpolate', ['linear'], ['zoom'], 10, 0.72, 14, 1.05, 16, 1.28],
     },
   })
 }
@@ -312,12 +371,17 @@ function setupEvents() {
       map.getCanvas().style.cursor = 'pointer'
       const features = map.queryRenderedFeatures(e.point, { layers: [layer] })
       if (!features?.length) return
-      const { name, categories } = features[0].properties as { name: string; categories: string }
+      const { name, categories, hasPenalty } = features[0].properties as {
+        name: string
+        categories: string
+        hasPenalty?: number
+      }
       hoverPopup
         ?.setLngLat(e.lngLat)
         .setHTML(
           `<div class="popup-name">${name}</div>` +
-          (categories ? `<div class="popup-cats">${categories}</div>` : ''),
+          (categories ? `<div class="popup-cats">${categories}</div>` : '') +
+          (hasPenalty ? `<div class="popup-penalty">有稽查紀錄</div>` : ''),
         )
         .addTo(map)
     })
@@ -458,6 +522,10 @@ onMounted(() => {
         cluster: true,
         clusterMaxZoom: 14,
         clusterRadius: 40,
+        clusterProperties: {
+          // 叢集內有稽查紀錄的點數（>0 則叢集外圈改 amber）
+          penalty_sum: ['+', ['get', 'hasPenalty']],
+        },
       })
       addLayers()
       setupEvents()
@@ -500,7 +568,7 @@ watch(() => props.selectedId, updateSelectedFilter)
     <div
       v-show="!mapFailed"
       ref="container"
-      class="absolute inset-0 h-full w-full"
+      class="absolute inset-0 z-0 h-full w-full"
     />
 
     <div
@@ -527,7 +595,7 @@ watch(() => props.selectedId, updateSelectedFilter)
     <button
       v-if="interactive && !mapFailed"
       type="button"
-      class="absolute right-3 top-3 z-10 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-gray-50 disabled:opacity-50"
+      class="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-gray-50 disabled:opacity-50"
       :disabled="geo.isLoading.value"
       title="重新定位我的位置"
       aria-label="重新定位我的位置"
@@ -536,6 +604,14 @@ watch(() => props.selectedId, updateSelectedFilter)
       <Loader2 v-if="geo.isLoading.value" :size="18" class="animate-spin text-primary-700" />
       <Locate v-else :size="18" class="text-gray-600" />
     </button>
+
+    <!-- 手機：僅稽查提示（避開中央 FAB） -->
+    <div
+      v-if="interactive && !mapFailed && schools.length > 0"
+      class="pointer-events-none absolute bottom-24 left-3 z-10 max-w-[11rem] rounded-md border border-amber-200/80 bg-white/92 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 shadow backdrop-blur-sm md:hidden"
+    >
+      橘外圈＝有稽查紀錄
+    </div>
 
     <!-- 類別顏色圖例（桌面才顯示） -->
     <div
@@ -560,9 +636,21 @@ watch(() => props.selectedId, updateSelectedFilter)
       </div>
       <div class="mt-1.5 flex items-center gap-1.5 border-t border-gray-100 pt-1.5 py-0.5">
         <svg width="11" height="14" viewBox="0 0 28 36" class="shrink-0">
-          <path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z" :fill="SELECTED_COLOR" stroke="white" stroke-width="2.5"/>
+          <path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z" :fill="SELECTED_COLOR" stroke="white" stroke-width="3"/>
         </svg>
         已選取
+      </div>
+      <div class="flex items-center gap-1.5 py-0.5">
+        <!-- 圖例用灰色針＋橘圈，避免與文理類綠色混淆；地圖上仍保留各類別色＋橘外圈 -->
+        <svg width="14" height="16" viewBox="-2 -2 32 40" class="shrink-0">
+          <circle cx="14" cy="14" r="13" fill="#fff7ed" :stroke="PENALTY_RING" stroke-width="3.2"/>
+          <path
+            d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"
+            :fill="DEFAULT_COLOR"
+          />
+          <circle cx="14" cy="14" r="5" fill="white" opacity="0.9"/>
+        </svg>
+        <span>橘外圈＝有稽查</span>
       </div>
     </div>
 
@@ -590,5 +678,11 @@ watch(() => props.selectedId, updateSelectedFilter)
   margin-top: 2px;
   color: #6b7280;
   font-size: 11px;
+}
+.school-popup .popup-penalty {
+  margin-top: 4px;
+  color: #b45309;
+  font-size: 11px;
+  font-weight: 500;
 }
 </style>

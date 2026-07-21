@@ -2,7 +2,8 @@
 import { trackEvent } from '@/analytics'
 import Tag from '@/components/common/Tag.vue'
 import type { School } from '@/types'
-import { ChevronRight, MapPin } from 'lucide-vue-next'
+import { ChevronRight, MapPin, ShieldAlert } from 'lucide-vue-next'
+import { computed } from 'vue'
 
 const props = withDefaults(
   defineProps<{
@@ -13,6 +14,10 @@ const props = withDefaults(
 )
 
 defineEmits<{ hover: [id: string | null] }>()
+
+const hasPenalty = computed(
+  () => (props.school.penaltyCount ?? 0) > 0 || props.school.penalties.length > 0,
+)
 
 function onNavigate() {
   trackEvent('select_school', { school_id: props.school.id, source: 'list' })
@@ -47,6 +52,14 @@ function onNavigate() {
       {{ school.address }}
     </p>
     <div class="mt-3 flex flex-wrap items-center gap-1.5">
+      <span
+        v-if="hasPenalty"
+        class="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2 py-0.5 text-xs font-medium text-amber-800"
+        title="有稽查紀錄"
+      >
+        <ShieldAlert :size="12" class="shrink-0" />
+        有稽查
+      </span>
       <Tag v-for="tag in school.categoryTags" :key="tag" active>{{ tag }}</Tag>
       <Tag v-for="tag in [...school.levelTags, ...school.extraTags]" :key="tag">{{ tag }}</Tag>
     </div>

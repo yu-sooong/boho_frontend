@@ -9,8 +9,16 @@ const props = withDefaults(
     keyword?: string
     district?: string
     category?: string
+    onlyHasPenalty?: boolean
   }>(),
-  { floating: false, showBack: false, keyword: '', district: '', category: '' },
+  {
+    floating: false,
+    showBack: false,
+    keyword: '',
+    district: '',
+    category: '',
+    onlyHasPenalty: false,
+  },
 )
 
 const emit = defineEmits<{
@@ -22,7 +30,7 @@ const emit = defineEmits<{
 const activeCount = computed(() => {
   const d = props.district ? props.district.split(',').filter(Boolean).length : 0
   const c = props.category ? props.category.split(',').filter(Boolean).length : 0
-  return d + c
+  return d + c + (props.onlyHasPenalty ? 1 : 0)
 })
 </script>
 

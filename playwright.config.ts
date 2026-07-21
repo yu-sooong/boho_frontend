@@ -65,7 +65,7 @@ export default defineConfig({
         screenshot: 'only-on-failure',
         trace: 'retain-on-failure',
       },
-      testMatch: /remote-qa-monkey\.spec\.ts/,
+      testMatch: /(?:remote-qa-monkey|detail-api-count)\.spec\.ts/,
       timeout: 120_000,
     },
   ],

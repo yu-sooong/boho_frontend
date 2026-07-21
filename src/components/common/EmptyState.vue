@@ -39,7 +39,7 @@ withDefaults(
     <RouterLink
       v-if="ctaLabel && ctaTo"
       :to="ctaTo"
-      class="inline-flex min-h-10 items-center rounded-md bg-primary-700 px-4 py-2.5 text-sm font-medium text-white hover:bg-primary-800"
+      class="mt-1 text-sm font-medium text-primary-700 hover:underline"
     >
       {{ ctaLabel }}
     </RouterLink>

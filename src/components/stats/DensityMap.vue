@@ -100,8 +100,12 @@ function liftTransform(d: { cx: number; cy: number }) {
 </script>
 
 <template>
-  <div class="relative mx-auto aspect-square w-full max-w-3xl select-none sm:aspect-[4/3]">
-    <svg :viewBox="taichungViewBox" class="h-full w-full overflow-visible">
+  <div class="relative mx-auto w-full max-w-3xl select-none">
+    <svg
+      :viewBox="taichungViewBox"
+      class="h-auto w-full overflow-visible"
+      preserveAspectRatio="xMidYMid meet"
+    >
       <defs>
         <linearGradient id="district-selected-gradient" x1="0%" y1="0%" x2="0%" y2="100%">
           <stop offset="0%" stop-color="#2d7a45" />

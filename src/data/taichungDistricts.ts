@@ -9,7 +9,7 @@ export interface TaichungDistrict {
   selected?: boolean
 }
 
-export const taichungViewBox = "0 0 420 420"
+export const taichungViewBox = "-6 90 432 240"
 
 export const taichungDistricts: TaichungDistrict[] = [
   {

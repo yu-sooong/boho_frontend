@@ -337,7 +337,7 @@ async function shareSchool() {
 
           <div class="mt-4 flex w-fit items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-500">
             <ShieldCheck :size="14" class="shrink-0 text-primary-600" />
-            不刪負評、來源可考，僅刊登真實使用者投稿
+            依標準審核、來源可考，僅刊登經審核的親身經驗投稿
           </div>
         </div>
 

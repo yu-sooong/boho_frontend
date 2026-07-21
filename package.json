@@ -10,6 +10,7 @@
     "test:e2e": "playwright test",
     "test:e2e:map": "playwright test e2e/map-navigation.spec.ts",
     "test:e2e:remote": "playwright test --project=remote-qa",
+    "test:e2e:detail-api": "playwright test e2e/detail-api-count.spec.ts --project=remote-qa",
     "ad:render": "npm run ad:render --prefix reels",
     "ad:frame": "npm run frame:generate --prefix reels",
     "og:render": "node scripts/render-og.mjs"

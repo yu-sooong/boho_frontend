@@ -121,6 +121,8 @@ export const useSchoolStore = defineStore('school', () => {
   const keyword = ref('')
   const selectedDistricts = ref<string[]>([])
   const selectedCategories = ref<string[]>([])
+  /** 僅顯示有稽查／裁罰紀錄的補習班 */
+  const onlyHasPenalty = ref(false)
 
   // ── 使用者定位座標 ───────────────────────────────────────────────────────────
   const userLat = ref<number | null>(null)
@@ -163,6 +165,11 @@ export const useSchoolStore = defineStore('school', () => {
     if (selectedCategories.value.length > 0) {
       const set = new Set(selectedCategories.value)
       result = result.filter((s) => s.categoryTags.some((c) => set.has(c)))
+    }
+    if (onlyHasPenalty.value) {
+      result = result.filter(
+        (s) => (s.penaltyCount ?? 0) > 0 || s.penalties.length > 0,
+      )
     }
     return result
   })
@@ -345,10 +352,15 @@ export const useSchoolStore = defineStore('school', () => {
     selectedCategories.value = selectedCategories.value.filter((x) => x !== c)
   }
 
+  function setOnlyHasPenalty(v: boolean) {
+    onlyHasPenalty.value = v
+  }
+
   function clearFilters() {
     keyword.value = ''
     selectedDistricts.value = []
     selectedCategories.value = []
+    onlyHasPenalty.value = false
   }
 
   function setSelectedSchool(id: string | null) { selectedSchoolId.value = id }
@@ -375,6 +387,7 @@ export const useSchoolStore = defineStore('school', () => {
     keyword,
     selectedDistricts,
     selectedCategories,
+    onlyHasPenalty,
     userLat,
     userLng,
     currentDetail,
@@ -402,6 +415,7 @@ export const useSchoolStore = defineStore('school', () => {
     setKeyword,
     setDistricts, toggleDistrict, removeDistrict,
     setCategories, toggleCategory, removeCategory,
+    setOnlyHasPenalty,
     clearFilters,
     setSelectedSchool,
     setMobileMode,

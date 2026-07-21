@@ -39,7 +39,9 @@ const open = ref(false)
           查看來源
         </a>
       </div>
-      <p class="pt-1 text-xs text-gray-400">以主管機關最新公告為準</p>
+      <p class="pt-1 text-xs text-gray-400">
+        內容轉載自主管機關公告，以最新公告為準；原始連結可能因改版而失效。本平台不自行作成裁罰認定。
+      </p>
     </div>
   </div>
 </template>

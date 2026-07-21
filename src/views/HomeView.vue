@@ -85,12 +85,17 @@ watch(
 )
 
 watch(
-  [() => store.selectedDistricts.slice(), () => store.selectedCategories.slice()],
-  ([districts, categories]) => {
-    if (districts.length === 0 && categories.length === 0) return
+  [
+    () => store.selectedDistricts.slice(),
+    () => store.selectedCategories.slice(),
+    () => store.onlyHasPenalty,
+  ],
+  ([districts, categories, onlyPenalty]) => {
+    if (districts.length === 0 && categories.length === 0 && !onlyPenalty) return
     trackEvent('apply_filter', {
       district_count: districts.length,
       category_count: categories.length,
+      only_has_penalty: onlyPenalty ? 1 : 0,
       result_count: store.totalFiltered,
     })
   },
@@ -102,6 +107,7 @@ const hasActiveFilter = computed(
   () =>
     store.selectedDistricts.length > 0 ||
     store.selectedCategories.length > 0 ||
+    store.onlyHasPenalty ||
     store.keyword.length >= 2,
 )
 
@@ -111,7 +117,12 @@ const mapSchools = computed(() =>
 
 // ── 篩選變動時 fitBounds ─────────────────────────────────────────────────────
 watch(
-  [() => store.keyword, () => store.selectedDistricts, () => store.selectedCategories],
+  [
+    () => store.keyword,
+    () => store.selectedDistricts,
+    () => store.selectedCategories,
+    () => store.onlyHasPenalty,
+  ],
   () => {
     // 篩選變動時關閉預覽與列表 Sheet
     if (showPreview.value) closePreview()
@@ -226,14 +237,23 @@ function onListSheetScroll(e: Event) {
   if (nearBottom && store.hasMore) store.showMore()
 }
 
-function onFilterApply({ districts, categories }: { districts: string[]; categories: string[] }) {
+function onFilterApply({
+  districts,
+  categories,
+  onlyHasPenalty,
+}: {
+  districts: string[]
+  categories: string[]
+  onlyHasPenalty: boolean
+}) {
   store.setDistricts(districts)
   store.setCategories(categories)
+  store.setOnlyHasPenalty(onlyHasPenalty)
 }
 </script>
 
 <template>
-  <div class="flex h-screen flex-col overflow-hidden">
+  <div class="flex h-dvh flex-col overflow-hidden">
     <AppHeader />
 
     <div class="flex flex-1 overflow-hidden">
@@ -274,14 +294,27 @@ function onFilterApply({ districts, categories }: { districts: string[]; categor
                 :keyword="store.keyword"
                 :district="store.selectedDistricts.join(',')"
                 :category="store.selectedCategories.join(',')"
+                :only-has-penalty="store.onlyHasPenalty"
                 @update:keyword="store.setKeyword"
                 @open-filter="filterOpen = true"
               />
 
               <div
-                v-if="store.selectedDistricts.length || store.selectedCategories.length"
+                v-if="
+                  store.selectedDistricts.length ||
+                  store.selectedCategories.length ||
+                  store.onlyHasPenalty
+                "
                 class="mt-2 flex flex-wrap gap-1.5"
               >
+                <button
+                  v-if="store.onlyHasPenalty"
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100"
+                  @click="store.setOnlyHasPenalty(false)"
+                >
+                  有稽查紀錄 ✕
+                </button>
                 <button
                   v-for="d in store.selectedDistricts"
                   :key="d"
@@ -406,22 +439,35 @@ function onFilterApply({ districts, categories }: { districts: string[]; categor
           @ready="onMapReady"
         >
           <!-- 手機地圖模式：頂部搜尋列 + 已選篩選 chips -->
-          <div class="absolute inset-x-0 top-0 p-4 md:hidden">
+          <div class="absolute inset-x-0 top-0 z-20 p-4 md:hidden">
             <SearchFilterBar
               floating
               show-back
               :keyword="store.keyword"
               :district="store.selectedDistricts.join(',')"
               :category="store.selectedCategories.join(',')"
+              :only-has-penalty="store.onlyHasPenalty"
               @back="store.setMobileMode('list')"
               @update:keyword="store.setKeyword"
               @open-filter="filterOpen = true"
             />
             <!-- 已選 chips（地圖浮層版，半透明） -->
             <div
-              v-if="store.selectedDistricts.length || store.selectedCategories.length"
+              v-if="
+                store.selectedDistricts.length ||
+                store.selectedCategories.length ||
+                store.onlyHasPenalty
+              "
               class="mt-2 flex flex-wrap gap-1.5"
             >
+              <button
+                v-if="store.onlyHasPenalty"
+                type="button"
+                class="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-xs font-medium text-amber-800 backdrop-blur-sm"
+                @click="store.setOnlyHasPenalty(false)"
+              >
+                有稽查紀錄 ✕
+              </button>
               <button
                 v-for="d in store.selectedDistricts"
                 :key="d"
@@ -475,14 +521,15 @@ function onFilterApply({ districts, categories }: { districts: string[]; categor
 
           <!-- 手機地圖模式：無預覽時，底部「查看列表」按鈕 + 列表 Sheet -->
           <template v-if="!showPreview && store.mobileMode === 'map'">
-            <!-- 「查看 XX 間補習班」浮動按鈕 -->
+            <!-- 「查看 XX 間補習班」浮動按鈕（避開 iOS Safari 底欄／safe-area） -->
             <div
               v-if="!listSheetOpen"
-              class="absolute bottom-6 left-1/2 z-10 -translate-x-1/2 md:hidden"
+              class="pointer-events-none absolute inset-x-0 z-30 flex justify-center md:hidden"
+              style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))"
             >
               <button
                 type="button"
-                class="flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 shadow-lg active:bg-gray-50"
+                class="pointer-events-auto flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 shadow-lg active:bg-gray-50"
                 @click="listSheetOpen = true"
               >
                 <span class="inline-block h-2.5 w-2.5 rounded-full bg-primary-600" />
@@ -567,6 +614,7 @@ function onFilterApply({ districts, categories }: { districts: string[]; categor
       :open="filterOpen"
       :selected-districts="store.selectedDistricts"
       :selected-categories="store.selectedCategories"
+      :only-has-penalty="store.onlyHasPenalty"
       :districts="store.districts"
       :categories="store.categories"
       @close="filterOpen = false"

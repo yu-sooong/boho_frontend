@@ -11,6 +11,8 @@ export interface SearchParams {
   district?: string
   category?: string
   status?: string
+  /** 僅有稽查紀錄 */
+  hasPenalty?: boolean
   page?: number
   limit?: number
   lat?: number   // 使用者緯度（有值時後端依距離排序）
@@ -23,6 +25,7 @@ export function searchSchools(params: SearchParams = {}) {
     district: params.district,
     category: params.category,
     status: params.status,
+    hasPenalty: params.hasPenalty ? 'true' : undefined,
     page: params.page,
     limit: params.limit,
     lat: params.lat,

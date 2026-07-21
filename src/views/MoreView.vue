@@ -34,11 +34,11 @@ const features = [
 ]
 
 const infoLinks = [
-  { label: '關於我們', icon: Info, to: '/more/about' },
-  { label: '評價怎麼審核', icon: MessageSquareText, to: '/more/review-policy' },
-  { label: '聯絡我們', icon: Mail, to: '/more/contact' },
-  { label: '隱私權政策', icon: Shield, to: '/more/privacy' },
-  { label: '服務條款', icon: Scale, to: '/more/terms' },
+  { label: '關於我們', icon: Info, to: '/more/about', sub: '為什麼要蒐集家長與學生評價' },
+  { label: '評價怎麼審核', icon: MessageSquareText, to: '/more/review-policy', sub: '' },
+  { label: '聯絡我們', icon: Mail, to: '/more/contact', sub: '' },
+  { label: '隱私權政策', icon: Shield, to: '/more/privacy', sub: '' },
+  { label: '服務條款', icon: Scale, to: '/more/terms', sub: '' },
 ]
 
 const stats = [
@@ -50,19 +50,19 @@ const stats = [
 const faqs = [
   {
     q: '資料來源是哪裡？',
-    a: '基本資料來自教育部與台中市政府等開放資料；稽查／裁罰紀錄來自主管機關公告，並定期同步更新。',
+    a: '基本資料來自教育部與台中市政府等開放資料；稽查紀錄摘錄自主管機關公告，並定期同步。本平台非主管機關。機關網站改版後，原始連結可能失效，內容若有出入以各機關最新公告為準。',
   },
   {
     q: '評價是真實的嗎？',
-    a: '評價採匿名投稿（公開只顯示身份與接觸時期），須通過人工審核才會刊出。具體親身經驗不論正負都會保留，我們不刪真實負評。',
+    a: '評價採匿名投稿（公開只顯示身份與接觸時期），須通過人工審核才會刊出。符合標準的親身經驗不論正負都會保留；廣告、攻擊或不實內容則會退件。評價為投稿者意見，不代表本平台立場。',
   },
   {
     q: '如何回報資訊錯誤？',
-    a: '請到「聯絡我們」來信說明，我們會核實後更新。',
+    a: '請到「聯絡我們」來信說明並盡量附上佐證，我們會於合理範圍內核實後更新。',
   },
   {
     q: '補習班業者可以回應評價嗎？',
-    a: '目前無法在平台回應；此功能尚在規劃。若對公開評價有異議，可先透過「聯絡我們」說明。',
+    a: '目前無法在平台直接回應；此功能尚在規劃。若對公開內容或資料有異議，可先透過「聯絡我們」說明，我們會依服務條款與審核規則處理。',
   },
 ]
 </script>
@@ -109,9 +109,9 @@ const faqs = [
           >
             <span>採用教育部開放資料</span>
             <span style="color: rgba(255,255,255,0.2)">·</span>
-            <span>真實家長口碑</span>
+            <span>家長與學生評價</span>
             <span style="color: rgba(255,255,255,0.2)">·</span>
-            <span>不業配、不置頂</span>
+            <span>不販售置頂</span>
           </div>
         </div>
       </div>
@@ -133,17 +133,17 @@ const faqs = [
               <div class="mb-5 h-px bg-gray-100" />
               <div class="space-y-3 text-sm leading-relaxed text-gray-600">
                 <p>
-                  補亦樂乎幫台中家長在報名前查立案、看稽查、讀真實評價——用公開資料把資訊攤開，讓選擇有依據。
+                  我們想蒐集更多家長與學生的真實評價——實際上過課的人怎麼說，往往最有參考價值。同時彙整台中市立案與稽查公開資訊，並朝向以這些資料協助 AI 選班。
                 </p>
                 <p>
-                  我們不業配、不置頂、不刪真實負評。評價採匿名投稿與人工審核，資料來源皆可追查。
+                  評價採匿名投稿與人工審核，正面與需要改進的經驗都保留；我們不販售置頂或業配排序。
                 </p>
               </div>
               <RouterLink
                 to="/more/about"
                 class="mt-4 inline-flex min-h-10 items-center gap-1 text-sm font-medium text-primary-700 hover:underline"
               >
-                查看完整介紹與資料來源
+                閱讀品牌故事與資料來源
                 <ChevronRight :size="15" />
               </RouterLink>
             </div>
@@ -209,7 +209,10 @@ const faqs = [
                   <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-xl bg-gray-50">
                     <component :is="item.icon" :size="17" class="text-gray-400" />
                   </div>
-                  <span class="flex-1 text-[14px] font-medium text-gray-900">{{ item.label }}</span>
+                  <div class="min-w-0 flex-1">
+                    <p class="text-[14px] font-medium text-gray-900">{{ item.label }}</p>
+                    <p v-if="item.sub" class="text-xs text-gray-500">{{ item.sub }}</p>
+                  </div>
                   <ChevronRight :size="15" class="shrink-0 text-gray-200 transition-colors group-hover:text-gray-400" />
                 </RouterLink>
               </div>

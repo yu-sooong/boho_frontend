@@ -3,15 +3,21 @@ import type { School } from '@/types'
 import { ArrowRight, ExternalLink, MapPin, Navigation, Phone, ShieldAlert, X } from 'lucide-vue-next'
 import Tag from '@/components/common/Tag.vue'
 import StatusBadge from '@/components/common/StatusBadge.vue'
+import { computed } from 'vue'
 
 const props = defineProps<{
   school: School
 }>()
 
-const emit = defineEmits<{
+defineEmits<{
   close: []
   detail: [id: string]
 }>()
+
+const penaltyHint = computed(() => {
+  const n = props.school.penalties.length || props.school.penaltyCount || 0
+  return n > 0 ? n : 0
+})
 
 function openGoogleMaps() {
   const { lat, lng, address, name } = props.school
@@ -81,11 +87,11 @@ function openGoogleMaps() {
       </div>
 
       <div
-        v-if="school.penalties.length > 0"
+        v-if="penaltyHint > 0"
         class="flex items-center gap-2 rounded-md border border-amber-200 bg-amber-50 px-3 py-2 text-sm text-amber-800"
       >
         <ShieldAlert :size="15" class="shrink-0 text-amber-700" />
-        有 {{ school.penalties.length }} 筆稽查紀錄，進詳情可查看內容
+        有 {{ penaltyHint }} 筆稽查紀錄，進詳情可查看內容
       </div>
     </div>
 

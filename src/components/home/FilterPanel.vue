@@ -1,22 +1,24 @@
 <script setup lang="ts">
-import { X } from 'lucide-vue-next'
+import { ShieldAlert, X } from 'lucide-vue-next'
 import { ref, watch } from 'vue'
 
 const props = defineProps<{
   open: boolean
   selectedDistricts?: string[]
   selectedCategories?: string[]
+  onlyHasPenalty?: boolean
   districts?: string[]
   categories?: string[]
 }>()
 
 const emit = defineEmits<{
   close: []
-  apply: [{ districts: string[]; categories: string[] }]
+  apply: [{ districts: string[]; categories: string[]; onlyHasPenalty: boolean }]
 }>()
 
 const localDistricts = ref<string[]>([])
 const localCategories = ref<string[]>([])
+const localOnlyHasPenalty = ref(false)
 
 watch(
   () => props.open,
@@ -24,6 +26,7 @@ watch(
     if (v) {
       localDistricts.value = [...(props.selectedDistricts ?? [])]
       localCategories.value = [...(props.selectedCategories ?? [])]
+      localOnlyHasPenalty.value = props.onlyHasPenalty ?? false
     }
   },
 )
@@ -41,16 +44,24 @@ function toggleCategory(c: string) {
 }
 
 function apply() {
-  emit('apply', { districts: [...localDistricts.value], categories: [...localCategories.value] })
+  emit('apply', {
+    districts: [...localDistricts.value],
+    categories: [...localCategories.value],
+    onlyHasPenalty: localOnlyHasPenalty.value,
+  })
   emit('close')
 }
 
 function clear() {
   localDistricts.value = []
   localCategories.value = []
+  localOnlyHasPenalty.value = false
 }
 
-const activeCount = () => localDistricts.value.length + localCategories.value.length
+const activeCount = () =>
+  localDistricts.value.length +
+  localCategories.value.length +
+  (localOnlyHasPenalty.value ? 1 : 0)
 </script>
 
 <template>
@@ -88,7 +99,48 @@ const activeCount = () => localDistricts.value.length + localCategories.value.le
         </button>
       </div>
 
-      <div class="px-5 pb-8 space-y-6">
+      <div class="space-y-6 px-5 pb-8">
+        <!-- 稽查紀錄 -->
+        <section>
+          <h3 class="mb-3 text-sm font-semibold text-gray-700">稽查紀錄</h3>
+          <button
+            type="button"
+            class="flex w-full items-center gap-3 rounded-md border px-3.5 py-3 text-left transition-colors"
+            :class="
+              localOnlyHasPenalty
+                ? 'border-amber-500 bg-amber-50 text-amber-900'
+                : 'border-gray-300 bg-white text-gray-700 hover:border-amber-300'
+            "
+            :aria-pressed="localOnlyHasPenalty"
+            @click="localOnlyHasPenalty = !localOnlyHasPenalty"
+          >
+            <span
+              class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md"
+              :class="localOnlyHasPenalty ? 'bg-amber-100' : 'bg-gray-50'"
+            >
+              <ShieldAlert
+                :size="18"
+                :class="localOnlyHasPenalty ? 'text-amber-700' : 'text-gray-400'"
+              />
+            </span>
+            <span class="min-w-0 flex-1">
+              <span class="block text-sm font-medium">僅顯示有稽查紀錄</span>
+              <span class="mt-0.5 block text-xs text-gray-500">
+                近幾年曾出現在主管機關稽查／違規公告者
+              </span>
+            </span>
+            <span
+              class="h-5 w-5 shrink-0 rounded-full border-2"
+              :class="
+                localOnlyHasPenalty
+                  ? 'border-amber-600 bg-amber-600'
+                  : 'border-gray-300 bg-white'
+              "
+              aria-hidden="true"
+            />
+          </button>
+        </section>
+
         <!-- 行政區（多選） -->
         <section>
           <div class="mb-3 flex items-center justify-between">
