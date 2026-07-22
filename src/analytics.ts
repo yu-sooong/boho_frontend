@@ -34,9 +34,11 @@ export function initAnalytics(): void {
   if (!isAnalyticsEnabled() || initialized) return
   initialized = true
 
+  // 必須 push(arguments)，不可 push([...args])，否則 gtag 只載入腳本、不會送 collect
   window.dataLayer = window.dataLayer || []
-  window.gtag = function gtag(...args: unknown[]) {
-    window.dataLayer?.push(args)
+  window.gtag = function gtag(..._args: unknown[]) {
+    // eslint-disable-next-line prefer-rest-params
+    window.dataLayer!.push(arguments)
   }
   window.gtag('js', new Date())
   window.gtag('config', MEASUREMENT_ID, {
