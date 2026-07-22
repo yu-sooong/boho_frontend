@@ -39,7 +39,8 @@ export function usePageSeo(input: SeoInput) {
 
     const title = meta.ogTitle ?? meta.title
     const description = meta.ogDescription ?? meta.description
-    const image = meta.ogImage ?? `${SITE_URL}/og.png`
+    // ?v= 避免 LINE／FB 快取舊圖；比例維持 1200×630（社群標準）
+    const image = meta.ogImage ?? `${SITE_URL}/og.png?v=3`
 
     setMetaTag('og:title', title, true)
     if (description) setMetaTag('og:description', description, true)
