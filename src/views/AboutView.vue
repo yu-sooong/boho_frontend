@@ -166,15 +166,12 @@ const dataSources = [
           <p class="mb-3 text-xs font-medium text-gray-500">我們怎麼做</p>
           <div class="space-y-3">
             <div
-              v-for="(step, idx) in storySteps"
+              v-for="step in storySteps"
               :key="step.title"
               class="flex gap-3.5 rounded-md border border-gray-200 bg-white p-4"
             >
-              <div class="flex shrink-0 flex-col items-center gap-1">
-                <div class="flex h-9 w-9 items-center justify-center rounded-md bg-primary-50">
-                  <component :is="step.icon" :size="17" class="text-primary-700" />
-                </div>
-                <span class="text-[10px] font-medium text-gray-400">0{{ idx + 1 }}</span>
+              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-50">
+                <component :is="step.icon" :size="17" class="text-primary-700" />
               </div>
               <div>
                 <p class="text-sm font-semibold text-gray-900">{{ step.title }}</p>
