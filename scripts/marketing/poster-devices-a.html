@@ -1,0 +1,308 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px; height: 1080px;
+      font-family: "Noto Sans TC", sans-serif;
+      background:
+        radial-gradient(ellipse 70% 50% at 15% 15%, rgba(16,185,129,.16), transparent 55%),
+        linear-gradient(160deg, #f0fdfa 0%, #f8fafc 55%, #ecfdf5 100%);
+      color: #0f172a;
+      overflow: hidden;
+      position: relative;
+      padding: 48px 44px 40px;
+    }
+    .brand { display: flex; align-items: center; gap: 12px; font-size: 26px; font-weight: 900; }
+    .brand svg { width: 42px; height: 42px; }
+    h1 {
+      margin-top: 18px;
+      font-size: 48px;
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+      max-width: 620px;
+    }
+    .sub { margin-top: 10px; font-size: 22px; font-weight: 500; color: #475569; max-width: 560px; }
+
+    /* Desktop */
+    .laptop {
+      position: absolute;
+      left: 36px;
+      bottom: 118px;
+      width: 720px;
+      z-index: 2;
+    }
+    .laptop-bezel {
+      background: #1e293b;
+      border-radius: 18px 18px 8px 8px;
+      padding: 12px 12px 10px;
+      box-shadow: 0 36px 70px rgba(15,23,42,.28);
+    }
+    .laptop-screen {
+      height: 420px;
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+      display: grid;
+      grid-template-columns: 240px 1fr;
+    }
+    .laptop-base {
+      margin: 0 auto;
+      width: 780px;
+      height: 16px;
+      margin-left: -30px;
+      background: linear-gradient(180deg, #334155, #1e293b);
+      border-radius: 0 0 10px 10px;
+      box-shadow: 0 8px 16px rgba(15,23,42,.2);
+    }
+    .laptop-notch {
+      width: 90px; height: 8px; margin: -4px auto 0;
+      background: #0f172a; border-radius: 0 0 6px 6px;
+    }
+
+    .side {
+      border-right: 1px solid #e2e8f0;
+      background: #f8fafc;
+      display: flex; flex-direction: column;
+      font-size: 11px;
+    }
+    .search {
+      margin: 10px;
+      background: #fff;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      padding: 8px 10px;
+      color: #94a3b8;
+      font-weight: 600;
+    }
+    .count {
+      padding: 0 12px 8px;
+      font-weight: 800;
+      color: #0f766e;
+      font-size: 12px;
+    }
+    .card {
+      margin: 0 8px 8px;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 10px;
+      padding: 9px 10px;
+    }
+    .card.active { border-color: #99f6e4; box-shadow: 0 0 0 2px rgba(15,118,110,.12); }
+    .card b { display: block; font-size: 12px; font-weight: 800; line-height: 1.3; }
+    .card .meta { margin-top: 3px; color: #64748b; font-size: 10px; font-weight: 500; }
+    .tag {
+      display: inline-block; margin-top: 5px;
+      font-size: 9px; font-weight: 700; color: #0f766e;
+      background: #ecfdf5; border: 1px solid #99f6e4;
+      border-radius: 999px; padding: 2px 7px;
+    }
+    .penalty {
+      display: inline-block; margin-left: 4px;
+      font-size: 9px; font-weight: 700; color: #b45309;
+      background: #fff7ed; border: 1px solid #fdba74;
+      border-radius: 999px; padding: 2px 7px;
+    }
+
+    .map {
+      position: relative;
+      background:
+        linear-gradient(180deg, #e8f5f1 0%, #f1f5f9 100%);
+      overflow: hidden;
+    }
+    .road {
+      position: absolute; background: #fff; box-shadow: 0 0 0 1px #e2e8f0;
+    }
+    .road.h { height: 10px; left: 0; right: 0; }
+    .road.v { width: 10px; top: 0; bottom: 0; }
+    .park {
+      position: absolute; border-radius: 40%;
+      background: rgba(16,185,129,.18);
+    }
+    .river {
+      position: absolute;
+      background: rgba(56,189,248,.28);
+      border-radius: 40px;
+      transform: rotate(-18deg);
+    }
+    .cluster {
+      position: absolute;
+      border-radius: 50%;
+      color: #fff;
+      font-weight: 900;
+      display: flex; align-items: center; justify-content: center;
+      box-shadow: 0 4px 10px rgba(15,118,110,.35);
+      border: 3px solid #fff;
+    }
+    .cluster.sm { width: 42px; height: 42px; font-size: 14px; background: #0d9488; }
+    .cluster.md { width: 54px; height: 54px; font-size: 16px; background: #0f766e; }
+    .cluster.lg { width: 66px; height: 66px; font-size: 18px; background: #115e59; }
+    .cluster.pen { box-shadow: 0 0 0 3px #d97706, 0 4px 10px rgba(15,118,110,.35); }
+    .pin {
+      position: absolute; width: 22px; height: 28px;
+      filter: drop-shadow(0 3px 4px rgba(0,0,0,.2));
+    }
+    .legend {
+      position: absolute; left: 10px; bottom: 10px;
+      background: rgba(255,255,255,.94);
+      border-radius: 10px;
+      padding: 8px 10px;
+      font-size: 10px; font-weight: 700; color: #475569;
+      box-shadow: 0 4px 14px rgba(15,23,42,.1);
+      line-height: 1.55;
+    }
+    .fab {
+      position: absolute; left: 50%; bottom: 16px; transform: translateX(-50%);
+      background: #0f766e; color: #fff;
+      font-size: 12px; font-weight: 800;
+      padding: 8px 14px; border-radius: 999px;
+      white-space: nowrap;
+      box-shadow: 0 8px 18px rgba(15,118,110,.35);
+    }
+
+    /* Phone */
+    .phone {
+      position: absolute;
+      right: 48px;
+      bottom: 100px;
+      width: 250px;
+      height: 520px;
+      background: #0f172a;
+      border-radius: 36px;
+      padding: 10px;
+      z-index: 4;
+      box-shadow: 0 40px 70px rgba(15,23,42,.32);
+      transform: rotate(7deg);
+    }
+    .phone-screen {
+      height: 100%;
+      border-radius: 28px;
+      overflow: hidden;
+      background: #f8fafc;
+      position: relative;
+    }
+    .phone-bar {
+      height: 42px;
+      background: #fff;
+      border-bottom: 1px solid #e2e8f0;
+      display: flex; align-items: center;
+      padding: 0 10px; gap: 6px;
+      font-size: 10px; font-weight: 700; color: #64748b;
+    }
+    .phone-bar .box {
+      flex: 1; background: #f1f5f9; border-radius: 8px;
+      padding: 6px 8px; color: #94a3b8;
+    }
+    .phone-map { position: absolute; inset: 42px 0 0; }
+    .phone .cluster.sm { width: 34px; height: 34px; font-size: 12px; }
+    .phone .cluster.md { width: 42px; height: 42px; font-size: 13px; }
+    .phone .fab { font-size: 11px; bottom: 14px; padding: 7px 12px; }
+
+    .cta {
+      position: absolute; left: 44px; bottom: 40px;
+      background: #0f766e; color: #fff;
+      font-size: 24px; font-weight: 800;
+      padding: 14px 26px; border-radius: 999px;
+      z-index: 5;
+    }
+    .url {
+      position: absolute; right: 48px; bottom: 48px;
+      font-size: 22px; font-weight: 800; color: #0f766e; z-index: 5;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <svg viewBox="0 0 100 100" fill="none"><path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/><path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/><path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/><path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/><path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/></svg>
+    補亦樂乎
+  </div>
+  <h1>桌機看全貌<br/>手機當場查</h1>
+  <p class="sub">列表＋地圖＋稽查標示，台中立案補習班一次掌握。</p>
+
+  <div class="laptop">
+    <div class="laptop-bezel">
+      <div class="laptop-screen">
+        <div class="side">
+          <div class="search">搜尋補習班名稱或地址</div>
+          <div class="count">共 2,873 間補習班</div>
+          <div class="card active">
+            <b>私立三民文理技藝短期補習班</b>
+            <div class="meta">中區 · 220 公尺</div>
+            <span class="tag">文理類</span>
+          </div>
+          <div class="card">
+            <b>私立上益電腦短期補習班</b>
+            <div class="meta">豐原區 · 1.2 公里</div>
+            <span class="tag">資訊類</span><span class="penalty">有稽查</span>
+          </div>
+          <div class="card">
+            <b>私立鈴木音樂短期補習班</b>
+            <div class="meta">西屯區 · 800 公尺</div>
+            <span class="tag">音樂</span>
+          </div>
+          <div class="card">
+            <b>私立哈佛英語短期補習班</b>
+            <div class="meta">北區 · 1.5 公里</div>
+            <span class="tag">外語類</span>
+          </div>
+        </div>
+        <div class="map" id="desk-map">
+          <div class="park" style="width:90px;height:70px;left:40px;top:40px"></div>
+          <div class="park" style="width:120px;height:80px;right:50px;bottom:70px"></div>
+          <div class="river" style="width:220px;height:28px;left:120px;top:200px"></div>
+          <div class="road h" style="top:90px"></div>
+          <div class="road h" style="top:180px"></div>
+          <div class="road h" style="top:280px"></div>
+          <div class="road v" style="left:80px"></div>
+          <div class="road v" style="left:200px"></div>
+          <div class="road v" style="left:340px"></div>
+          <div class="cluster md" style="left:70px;top:50px">18</div>
+          <div class="cluster lg pen" style="left:190px;top:120px">52</div>
+          <div class="cluster sm" style="left:300px;top:60px">9</div>
+          <div class="cluster md pen" style="left:250px;top:240px">27</div>
+          <div class="cluster sm" style="left:100px;top:260px">6</div>
+          <svg class="pin" style="left:160px;top:70px" viewBox="0 0 28 36"><path fill="#0f766e" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+          <svg class="pin" style="left:360px;top:150px" viewBox="0 0 28 36"><path fill="#0369a1" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+          <svg class="pin" style="left:40px;top:200px" viewBox="0 0 28 36"><path fill="#7c3aed" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+          <svg class="pin" style="left:320px;top:300px" viewBox="0 0 28 36"><path fill="#d97706" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+          <div class="legend">
+            文理 · 外語 · 才藝 · 音樂<br/>
+            橘外圈＝有稽查紀錄
+          </div>
+          <div class="fab">查看 128 間補習班</div>
+        </div>
+      </div>
+    </div>
+    <div class="laptop-notch"></div>
+    <div class="laptop-base"></div>
+  </div>
+
+  <div class="phone">
+    <div class="phone-screen">
+      <div class="phone-bar"><div class="box">搜尋補習班…</div>篩選</div>
+      <div class="phone-map map">
+        <div class="park" style="width:70px;height:50px;left:20px;top:40px"></div>
+        <div class="river" style="width:160px;height:20px;left:40px;top:180px"></div>
+        <div class="road h" style="top:100px"></div>
+        <div class="road h" style="top:220px"></div>
+        <div class="road v" style="left:60px"></div>
+        <div class="road v" style="left:150px"></div>
+        <div class="cluster md pen" style="left:40px;top:70px">24</div>
+        <div class="cluster sm" style="left:140px;top:140px">8</div>
+        <div class="cluster md" style="left:90px;top:240px">15</div>
+        <svg class="pin" style="left:170px;top:90px" viewBox="0 0 28 36"><path fill="#0f766e" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:30px;top:200px" viewBox="0 0 28 36"><path fill="#0369a1" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:180px;top:280px" viewBox="0 0 28 36"><path fill="#d97706" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <div class="fab">查看 86 間補習班</div>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">免費查詢 →</div>
+  <div class="url">boho.yujii.app</div>
+</body>
+</html>

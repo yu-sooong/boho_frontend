@@ -33,8 +33,8 @@ usePageSeo({
       <h1 class="font-heading text-xl font-bold text-gray-900">{{ title }}</h1>
       <p class="max-w-sm text-sm leading-relaxed text-gray-500">{{ description }}</p>
       <p class="rounded-md bg-gray-100 px-3 py-1 text-xs font-medium text-gray-600">即將開放</p>
-      <RouterLink to="/" class="mt-2 text-sm font-medium text-primary-700 hover:underline">
-        回首頁找補習班
+      <RouterLink to="/more" class="mt-2 text-sm font-medium text-primary-700 hover:underline">
+        回更多頁
       </RouterLink>
     </div>
     <BottomTabBar />

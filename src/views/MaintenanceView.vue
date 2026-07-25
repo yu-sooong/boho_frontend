@@ -2,10 +2,11 @@
 import { CONTACT_EMAIL, mailto } from '@/config/site'
 import { usePageSeo } from '@/composables/usePageSeo'
 import { Wrench } from 'lucide-vue-next'
+import { RouterLink } from 'vue-router'
 
 usePageSeo({
-  title: '維護中 | 補亦樂乎',
-  description: '補亦樂乎目前進行系統維護，請稍後再訪。',
+  title: '服務暫停中 | 補亦樂乎',
+  description: '補亦樂乎地圖與列表服務目前暫停，靜態說明頁仍可瀏覽。',
   robots: 'noindex',
 })
 </script>
@@ -20,13 +21,18 @@ usePageSeo({
     >
       <Wrench :size="24" />
     </div>
-    <h1 class="mt-5 font-heading text-xl font-bold text-gray-900">網站維護中</h1>
+    <h1 class="mt-5 font-heading text-xl font-bold text-gray-900">服務暫停中</h1>
     <p class="mt-2 max-w-sm text-sm leading-relaxed text-gray-500">
-      我們正在升級服務，請稍後再回來。造成不便，敬請見諒。
+      地圖、列表、地區情報與評價相關功能目前暫停維運，資料查詢暫時無法使用。造成不便，敬請見諒。
     </p>
-    <p class="mt-6 text-sm text-gray-500">如需協助，請來信：</p>
+    <div class="mt-6 flex flex-wrap items-center justify-center gap-x-4 gap-y-2 text-sm font-medium">
+      <RouterLink to="/more/about" class="text-primary-700 hover:underline">關於我們</RouterLink>
+      <RouterLink to="/more/contact" class="text-primary-700 hover:underline">聯絡我們</RouterLink>
+      <RouterLink to="/more" class="text-primary-700 hover:underline">更多</RouterLink>
+    </div>
+    <p class="mt-8 text-sm text-gray-500">如需協助，請來信：</p>
     <a
-      :href="mailto('【維護中】詢問')"
+      :href="mailto('【服務暫停】詢問')"
       class="mt-1 text-sm font-medium text-primary-700 hover:underline"
     >
       {{ CONTACT_EMAIL }}

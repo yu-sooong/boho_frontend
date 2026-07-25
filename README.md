@@ -19,6 +19,7 @@ npm run dev
   - `VITE_SITE_URL=https://boho.yujii.app`
   - `VITE_CONTACT_EMAIL=yujiiii543@gmail.com`
   - `VITE_GA_MEASUREMENT_ID=G-XXXXXXXX`（GA4；未設則不上載追蹤）
+  - `VITE_MAINTENANCE_MODE=true`（選用：sunset／維運，API 頁改維護畫面）
 
 自訂網域：Pages → Custom domains → `boho.yujii.app`（DNS 在 `yujii.app` zone）。
 

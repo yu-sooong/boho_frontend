@@ -1,5 +1,22 @@
 import { createRouter, createWebHistory } from 'vue-router'
 
+/** Cloudflare Build 設 VITE_MAINTENANCE_MODE=true 後重建，依賴 API 的頁面導向維運頁 */
+const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
+
+/** 維運期間仍可開的靜態／說明頁 */
+const MAINTENANCE_ALLOWED = new Set([
+  'maintenance',
+  'more',
+  'about',
+  'contact',
+  'privacy',
+  'terms',
+  'review-policy',
+  'guide',
+  'ai-pick',
+  'not-found',
+])
+
 const router = createRouter({
   history: createWebHistory(),
   routes: [
@@ -88,6 +105,12 @@ const router = createRouter({
       component: () => import('@/views/NotFoundView.vue'),
     },
   ],
+})
+
+router.beforeEach((to) => {
+  if (!MAINTENANCE_MODE) return true
+  if (to.name && MAINTENANCE_ALLOWED.has(String(to.name))) return true
+  return { name: 'maintenance', replace: true }
 })
 
 export default router

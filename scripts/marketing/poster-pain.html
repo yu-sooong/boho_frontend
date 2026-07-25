@@ -1,0 +1,101 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px;
+      height: 1080px;
+      font-family: "Noto Sans TC", sans-serif;
+      background: linear-gradient(165deg, #0f766e 0%, #115e59 45%, #134e4a 100%);
+      color: #fff;
+      padding: 72px 64px;
+      position: relative;
+      overflow: hidden;
+    }
+    body::before {
+      content: "";
+      position: absolute;
+      inset: -20%;
+      background:
+        radial-gradient(circle at 80% 20%, rgba(255,255,255,.12), transparent 40%),
+        radial-gradient(circle at 10% 90%, rgba(16,185,129,.25), transparent 45%);
+    }
+    .inner { position: relative; z-index: 1; height: 100%; display: flex; flex-direction: column; }
+    .brand { font-size: 26px; font-weight: 800; opacity: .9; letter-spacing: 0.04em; }
+    h1 {
+      margin-top: 48px;
+      font-size: 68px;
+      font-weight: 900;
+      line-height: 1.2;
+      letter-spacing: -0.03em;
+    }
+    .card {
+      margin-top: 48px;
+      background: rgba(255,255,255,.12);
+      border: 1px solid rgba(255,255,255,.22);
+      border-radius: 28px;
+      padding: 36px 40px;
+      backdrop-filter: blur(8px);
+    }
+    .card p {
+      font-size: 34px;
+      font-weight: 700;
+      line-height: 1.45;
+    }
+    .card p + p { margin-top: 22px; opacity: .92; font-weight: 500; font-size: 28px; }
+    .tags {
+      margin-top: auto;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      padding-top: 48px;
+    }
+    .tag {
+      background: #fff;
+      color: #0f766e;
+      font-size: 24px;
+      font-weight: 800;
+      padding: 14px 22px;
+      border-radius: 999px;
+    }
+    .footer {
+      margin-top: 40px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    .cta {
+      background: #10b981;
+      color: #042f2e;
+      font-size: 28px;
+      font-weight: 900;
+      padding: 18px 32px;
+      border-radius: 999px;
+    }
+    .url { font-size: 26px; font-weight: 700; opacity: .95; }
+  </style>
+</head>
+<body>
+  <div class="inner">
+    <div class="brand">補亦樂乎 · BOHO</div>
+    <h1>還在 Google<br/>一間一間找補習班嗎？</h1>
+    <div class="card">
+      <p>其實可以更快：地圖上看立案、查稽查、讀家長評價。</p>
+      <p>台中 2,800+ 間立案資料，集中在同一個地方。</p>
+    </div>
+    <div class="tags">
+      <span class="tag">立案狀態</span>
+      <span class="tag">稽查紀錄</span>
+      <span class="tag">家長評價</span>
+      <span class="tag">免費使用</span>
+    </div>
+    <div class="footer">
+      <div class="cta">立刻查詢</div>
+      <div class="url">boho.yujii.app</div>
+    </div>
+  </div>
+</body>
+</html>

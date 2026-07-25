@@ -44,3 +44,7 @@ scripts/reels-stage/**/*.jpg
 # Large binary mockups if ever copied under frontend
 **/*.psd
 **/*.ai
+
+# Generated Threads posters (re-run: node scripts/marketing/render-posters.mjs)
+scripts/marketing/out/*
+!scripts/marketing/out/.gitkeep

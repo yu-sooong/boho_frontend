@@ -1,0 +1,191 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px;
+      height: 1080px;
+      font-family: "Noto Sans TC", sans-serif;
+      background:
+        radial-gradient(ellipse 80% 60% at 20% 10%, rgba(16,185,129,.14), transparent 55%),
+        radial-gradient(ellipse 70% 50% at 90% 90%, rgba(15,118,110,.10), transparent 50%),
+        #f4faf8;
+      color: #0f172a;
+      overflow: hidden;
+      position: relative;
+      padding: 64px 56px 56px;
+    }
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      font-size: 28px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .brand svg { width: 48px; height: 48px; }
+    .eyebrow {
+      margin-top: 28px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f766e;
+    }
+    h1 {
+      margin-top: 12px;
+      font-size: 64px;
+      font-weight: 900;
+      line-height: 1.18;
+      letter-spacing: -0.03em;
+      max-width: 920px;
+    }
+    .sub {
+      margin-top: 18px;
+      font-size: 26px;
+      font-weight: 500;
+      color: #475569;
+      line-height: 1.45;
+      max-width: 560px;
+    }
+    .phone-wrap {
+      position: absolute;
+      right: 72px;
+      bottom: 120px;
+      width: 340px;
+      height: 680px;
+      border-radius: 44px;
+      background: #0f172a;
+      padding: 14px;
+      box-shadow: 0 40px 80px rgba(15, 23, 42, 0.22);
+      transform: rotate(-6deg);
+    }
+    .phone-screen {
+      width: 100%;
+      height: 100%;
+      border-radius: 32px;
+      overflow: hidden;
+      background:
+        linear-gradient(180deg, #ecfdf5 0%, #f8fafc 40%, #e2e8f0 100%);
+      position: relative;
+    }
+    .map-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(15,118,110,.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(15,118,110,.08) 1px, transparent 1px);
+      background-size: 36px 36px;
+    }
+    .pin {
+      position: absolute;
+      width: 28px;
+      height: 36px;
+      filter: drop-shadow(0 4px 6px rgba(0,0,0,.18));
+    }
+    .pin path { fill: #0f766e; }
+    .pin.amber path { fill: #d97706; }
+    .pin.blue path { fill: #0369a1; }
+    .chip {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 18px;
+      background: rgba(255,255,255,.94);
+      border-radius: 16px;
+      padding: 14px 16px;
+      box-shadow: 0 8px 24px rgba(15,23,42,.12);
+    }
+    .chip strong { display: block; font-size: 18px; font-weight: 800; }
+    .chip span { display: block; margin-top: 4px; font-size: 14px; color: #64748b; font-weight: 500; }
+    .features {
+      position: absolute;
+      left: 56px;
+      bottom: 160px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .feat {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      background: #fff;
+      border: 1px solid #d1fae5;
+      border-radius: 18px;
+      padding: 16px 20px;
+      width: 420px;
+      box-shadow: 0 10px 30px rgba(15,118,110,.06);
+    }
+    .dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: #10b981;
+      flex-shrink: 0;
+    }
+    .feat p { font-size: 24px; font-weight: 700; }
+    .cta {
+      position: absolute;
+      left: 56px;
+      bottom: 56px;
+      display: inline-flex;
+      align-items: center;
+      gap: 10px;
+      background: #0f766e;
+      color: #fff;
+      font-size: 26px;
+      font-weight: 800;
+      padding: 16px 28px;
+      border-radius: 999px;
+    }
+    .url {
+      position: absolute;
+      right: 56px;
+      bottom: 64px;
+      font-size: 22px;
+      font-weight: 700;
+      color: #0f766e;
+    }
+  </style>
+</head>
+<body>
+  <div class="brand">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    補亦樂乎
+  </div>
+  <p class="eyebrow">台中補習班地圖</p>
+  <h1>報名前，先看立案<br/>與家長真實評價</h1>
+  <p class="sub">地圖、公開資訊、審核後評價，一次看清楚。</p>
+
+  <div class="features">
+    <div class="feat"><span class="dot"></span><p>立案狀態一鍵查</p></div>
+    <div class="feat"><span class="dot"></span><p>稽查紀錄地圖標示</p></div>
+    <div class="feat"><span class="dot"></span><p>家長／學生可匿名評價</p></div>
+  </div>
+
+  <div class="phone-wrap">
+    <div class="phone-screen">
+      <div class="map-grid"></div>
+      <svg class="pin" style="left:70px;top:160px" viewBox="0 0 28 36"><path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+      <svg class="pin blue" style="left:180px;top:240px" viewBox="0 0 28 36"><path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+      <svg class="pin amber" style="left:130px;top:320px" viewBox="0 0 28 36"><path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+      <svg class="pin" style="left:220px;top:180px" viewBox="0 0 28 36"><path d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+      <div class="chip">
+        <strong>附近 12 間立案補習班</strong>
+        <span>橘外圈＝有稽查紀錄</span>
+      </div>
+    </div>
+  </div>
+
+  <div class="cta">免費查詢 →</div>
+  <div class="url">boho.yujii.app</div>
+</body>
+</html>

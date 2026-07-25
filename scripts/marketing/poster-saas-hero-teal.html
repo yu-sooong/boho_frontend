@@ -1,0 +1,324 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@500;600;700&family=Noto+Sans+TC:wght@500;700;900&display=swap" rel="stylesheet" />
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px;
+      height: 1350px;
+      font-family: "Noto Sans TC", Inter, system-ui, sans-serif;
+      color: #fff;
+      overflow: hidden;
+      position: relative;
+      background:
+        radial-gradient(ellipse 80% 50% at 90% 10%, rgba(255,255,255,.16), transparent 45%),
+        radial-gradient(ellipse 70% 55% at 0% 90%, rgba(16,185,129,.28), transparent 50%),
+        linear-gradient(165deg, #0f7c73 0%, #0d6e66 48%, #0a5c56 100%);
+    }
+
+    .wrap {
+      position: relative;
+      z-index: 1;
+      height: 100%;
+      padding: 52px 48px 44px;
+      display: flex;
+      flex-direction: column;
+    }
+
+    .brand-top {
+      font-size: 22px;
+      font-weight: 800;
+      letter-spacing: 0.04em;
+      opacity: .92;
+      margin-bottom: 18px;
+    }
+
+    h1 {
+      font-size: 54px;
+      font-weight: 900;
+      letter-spacing: -0.04em;
+      line-height: 1.15;
+      max-width: 940px;
+    }
+
+    .sub {
+      margin-top: 16px;
+      font-size: 23px;
+      font-weight: 500;
+      line-height: 1.45;
+      color: rgba(255,255,255,.88);
+      max-width: 860px;
+    }
+
+    .chips {
+      margin-top: 26px;
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .chip {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 12px 18px;
+      border-radius: 999px;
+      background: rgba(255,255,255,.14);
+      border: 1px solid rgba(255,255,255,.22);
+      box-shadow: 0 10px 28px rgba(0,0,0,.12);
+      backdrop-filter: blur(14px);
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
+    }
+
+    .stage {
+      position: relative;
+      margin-top: 32px;
+      flex: 1;
+      min-height: 0;
+    }
+
+    .map-shell {
+      position: absolute;
+      left: 0;
+      right: 70px;
+      top: 0;
+      bottom: 16px;
+      border-radius: 32px;
+      overflow: hidden;
+      background: linear-gradient(145deg, #e8f7f3 0%, #f1f5f9 45%, #e2e8f0 100%);
+      box-shadow:
+        0 40px 80px rgba(0,0,0,.28),
+        0 1px 0 rgba(255,255,255,.35) inset;
+      border: 1px solid rgba(255,255,255,.18);
+    }
+
+    .road { position: absolute; background: rgba(255,255,255,.92); }
+    .road.h { height: 14px; left: 0; right: 0; }
+    .road.v { width: 14px; top: 0; bottom: 0; }
+    .park {
+      position: absolute; border-radius: 42%;
+      background: rgba(16,185,129,.16);
+    }
+    .water {
+      position: absolute;
+      background: rgba(56,189,248,.22);
+      border-radius: 60px;
+      transform: rotate(-16deg);
+    }
+
+    .pin {
+      position: absolute;
+      width: 34px;
+      height: 44px;
+      filter: drop-shadow(0 10px 14px rgba(15,23,42,.22));
+    }
+
+    .glass {
+      position: absolute;
+      background: rgba(255,255,255,.82);
+      border: 1px solid rgba(255,255,255,.75);
+      box-shadow: 0 18px 40px rgba(15,23,42,.12);
+      backdrop-filter: blur(16px);
+      border-radius: 22px;
+      padding: 16px 18px;
+      color: #0b1220;
+    }
+    .glass b { display: block; font-size: 18px; font-weight: 800; line-height: 1.25; }
+    .glass .meta { margin-top: 4px; font-size: 14px; color: #64748b; font-weight: 600; }
+    .stars { margin-top: 8px; color: #f59e0b; font-size: 14px; font-weight: 800; letter-spacing: .04em; }
+    .tag {
+      display: inline-block; margin-top: 8px;
+      font-size: 12px; font-weight: 800; color: #0f7c73;
+      background: rgba(15,124,115,.08); border-radius: 999px; padding: 4px 10px;
+    }
+
+    .phone {
+      position: absolute;
+      right: 0;
+      bottom: 4px;
+      width: 300px;
+      height: 620px;
+      background: linear-gradient(180deg, #1e293b, #0f172a);
+      border-radius: 44px;
+      padding: 12px;
+      box-shadow:
+        0 50px 90px rgba(0,0,0,.35),
+        0 0 0 1px rgba(255,255,255,.08) inset;
+      z-index: 5;
+      transform: rotate(6deg);
+    }
+    .phone-screen {
+      height: 100%;
+      border-radius: 34px;
+      overflow: hidden;
+      background: #f8fafc;
+      position: relative;
+      color: #0b1220;
+    }
+    .ph-top {
+      padding: 16px 14px 12px;
+      background: rgba(255,255,255,.92);
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .ph-search {
+      background: #f1f5f9;
+      border-radius: 14px;
+      padding: 11px 12px;
+      font-size: 13px;
+      font-weight: 600;
+      color: #94a3b8;
+    }
+    .ph-chips { margin-top: 10px; display: flex; gap: 6px; flex-wrap: wrap; }
+    .ph-chips i {
+      font-style: normal;
+      font-size: 11px;
+      font-weight: 800;
+      color: #0f7c73;
+      background: #ecfdf5;
+      border: 1px solid #99f6e4;
+      border-radius: 999px;
+      padding: 4px 9px;
+    }
+    .ph-map {
+      position: absolute;
+      inset: 108px 0 150px;
+      background: linear-gradient(160deg, #d1fae5, #e2e8f0);
+    }
+    .ph-card {
+      position: absolute;
+      left: 12px; right: 12px; bottom: 14px;
+      background: rgba(255,255,255,.92);
+      border: 1px solid rgba(255,255,255,.8);
+      border-radius: 20px;
+      padding: 14px;
+      box-shadow: 0 16px 36px rgba(15,23,42,.14);
+      backdrop-filter: blur(12px);
+    }
+    .ph-card b { display: block; font-size: 15px; font-weight: 900; line-height: 1.25; }
+    .ph-card .row { margin-top: 6px; display: flex; justify-content: space-between; align-items: center; }
+    .ph-card .rating { color: #b45309; font-size: 13px; font-weight: 800; }
+    .ph-card .dist { color: #0f7c73; font-size: 13px; font-weight: 800; }
+
+    .footer {
+      margin-top: 18px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 20px;
+    }
+    .cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 280px;
+      background: #10b981;
+      color: #042f2e;
+      font-size: 26px;
+      font-weight: 900;
+      padding: 18px 36px;
+      border-radius: 999px;
+      box-shadow: 0 18px 36px rgba(0,0,0,.22);
+    }
+    .brand-foot {
+      text-align: right;
+      display: flex;
+      flex-direction: column;
+      align-items: flex-end;
+      gap: 6px;
+    }
+    .brand-foot .logo {
+      display: flex; align-items: center; gap: 10px;
+      font-size: 22px; font-weight: 900; color: #fff;
+    }
+    .brand-foot .logo svg { width: 34px; height: 34px; }
+    .brand-foot .url { font-size: 18px; font-weight: 700; color: rgba(255,255,255,.88); }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="brand-top">補亦樂乎 · BOHO</div>
+    <h1>找補習班，像找餐廳一樣簡單。</h1>
+    <p class="sub">直接查看地圖、官方立案、稽查紀錄與家長評價，一站完成。</p>
+
+    <div class="chips">
+      <div class="chip"><span>📍</span>地圖搜尋</div>
+      <div class="chip"><span>⭐</span>家長評價</div>
+      <div class="chip"><span>🏛</span>官方立案</div>
+      <div class="chip"><span>📝</span>稽查紀錄</div>
+    </div>
+
+    <div class="stage">
+      <div class="map-shell">
+        <div class="park" style="width:160px;height:110px;left:60px;top:50px"></div>
+        <div class="park" style="width:140px;height:100px;right:120px;bottom:80px"></div>
+        <div class="water" style="width:280px;height:36px;left:220px;top:260px"></div>
+        <div class="road h" style="top:120px"></div>
+        <div class="road h" style="top:240px"></div>
+        <div class="road h" style="top:400px"></div>
+        <div class="road v" style="left:140px"></div>
+        <div class="road v" style="left:320px"></div>
+        <div class="road v" style="left:520px"></div>
+
+        <svg class="pin" style="left:180px;top:90px" viewBox="0 0 28 36"><path fill="#0f7c73" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:360px;top:160px" viewBox="0 0 28 36"><path fill="#0369a1" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:260px;top:300px" viewBox="0 0 28 36"><path fill="#d97706" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:480px;top:220px" viewBox="0 0 28 36"><path fill="#7c3aed" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:120px;top:360px" viewBox="0 0 28 36"><path fill="#0f7c73" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+        <svg class="pin" style="left:420px;top:380px" viewBox="0 0 28 36"><path fill="#0369a1" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+
+        <div class="glass" style="left:48px;top:48px;width:250px">
+          <b>附近 128 間立案補習班</b>
+          <div class="meta">西屯 · 南屯 · 北區</div>
+        </div>
+        <div class="glass" style="left:300px;top:150px;width:260px">
+          <b>私立何嘉仁美語短期補習班</b>
+          <div class="meta">西屯區 · 立案營業中</div>
+          <div class="stars">★★★★☆ 4.6 · 家長評價</div>
+          <span class="tag">有稽查紀錄</span>
+        </div>
+        <div class="glass" style="left:80px;bottom:40px;width:230px">
+          <b>橘外圈＝有稽查</b>
+          <div class="meta">地圖上一眼分辨</div>
+        </div>
+      </div>
+
+      <div class="phone">
+        <div class="phone-screen">
+          <div class="ph-top">
+            <div class="ph-search">搜尋補習班名稱或地址</div>
+            <div class="ph-chips">
+              <i>西屯區</i><i>文理類</i><i>有稽查</i>
+            </div>
+          </div>
+          <div class="ph-map">
+            <svg class="pin" style="left:40px;top:50px;width:26px;height:34px" viewBox="0 0 28 36"><path fill="#0f7c73" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+            <svg class="pin" style="left:140px;top:110px;width:26px;height:34px" viewBox="0 0 28 36"><path fill="#0369a1" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+            <svg class="pin" style="left:80px;top:200px;width:26px;height:34px" viewBox="0 0 28 36"><path fill="#d97706" d="M14 0C6.27 0 0 6.27 0 14c0 4.83 2.46 9.1 6.22 11.67L14 36l7.78-10.33C25.54 23.1 28 18.83 28 14 28 6.27 21.73 0 14 0z"/></svg>
+          </div>
+          <div class="ph-card">
+            <b>私立鈴木音樂短期補習班</b>
+            <div class="row">
+              <span class="rating">★ 4.8 家長評價</span>
+              <span class="dist">300 公尺</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="footer">
+      <div class="cta">立即免費查看</div>
+      <div class="brand-foot">
+        <div class="logo">
+          <svg viewBox="0 0 100 100" fill="none"><path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#fff"/><path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#fff"/><path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#6ee7b7"/><path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#6ee7b7"/><path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#6ee7b7"/></svg>
+          BOHO
+        </div>
+        <div class="url">boho.yujii.app</div>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
