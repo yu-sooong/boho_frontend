@@ -7,15 +7,16 @@ import AppHeader from '@/components/layout/AppHeader.vue'
 import BottomTabBar from '@/components/layout/BottomTabBar.vue'
 import CityPickerSheet from '@/components/common/CityPickerSheet.vue'
 import AnimatedNumber from '@/components/common/AnimatedNumber.vue'
+import Sk from '@/components/common/Sk.vue'
 import SproutLogo from '@/components/common/SproutLogo.vue'
-import { getStatsCategories, getStatsDistricts } from '@/api/stats'
-import type { ApiCategoryStat, ApiDistrictStat } from '@/api/types'
+import type { ApiDistrictStat } from '@/api/types'
 import { trackEvent } from '@/analytics'
 import { useDetectedRegion } from '@/composables/useDetectedRegion'
 import { usePageSeo } from '@/composables/usePageSeo'
 import { SITE_URL } from '@/config/site'
 import { type CityId } from '@/data/cities'
 import { useCityStore } from '@/stores/cityStore'
+import { useStatsStore } from '@/stores/statsStore'
 import { addCityInterest, hasCityInterest } from '@/utils/cityInterest'
 import {
   ArrowRight,
@@ -40,6 +41,7 @@ usePageSeo({
 const TOP_N = 5
 
 const cityStore = useCityStore()
+const statsStore = useStatsStore()
 const router = useRouter()
 const route = useRoute()
 const { region, isLoading: locating, error: locateError, detect } = useDetectedRegion({
@@ -53,6 +55,9 @@ let ctaArrowNudgeTimer: ReturnType<typeof setTimeout> | null = null
 const rankTab = ref<'district' | 'category'>('district')
 const needCityHint = computed(() => route.query.needCity === '1')
 const interestSaved = ref(false)
+const statsLoading = computed(
+  () => statsStore.isLoading && statsStore.districtStats.length === 0,
+)
 
 function nudgeCtaArrow() {
   if (!cityStore.cityId) return
@@ -73,10 +78,6 @@ function toggleOnlyPenalty() {
   onlyPenalty.value = !onlyPenalty.value
   nudgeCtaArrow()
 }
-
-const districtsByCity = ref<Record<string, ApiDistrictStat[]>>({})
-const categoriesByCity = ref<Record<string, ApiCategoryStat[]>>({})
-const statsLoading = ref(false)
 
 watch(
   region,
@@ -100,10 +101,7 @@ const nearbyLabel = computed(() =>
   region.value?.supported ? region.value.name : null,
 )
 
-const allDistricts = computed(() => {
-  const name = cityStore.city?.name
-  return name ? districtsByCity.value[name] ?? [] : []
-})
+const allDistricts = computed(() => statsStore.districtStats)
 
 const topDistricts = computed(() => {
   const list = [...allDistricts.value]
@@ -117,8 +115,7 @@ const topDistricts = computed(() => {
 })
 
 const topCategories = computed(() => {
-  const name = cityStore.city?.name
-  const cats = name ? categoriesByCity.value[name] ?? [] : []
+  const cats = statsStore.categoryStats
   return [...cats].sort((a, b) => b.count - a.count).slice(0, TOP_N)
 })
 
@@ -148,27 +145,10 @@ function setRankTab(next: 'district' | 'category') {
   rankTab.value = next
 }
 
-async function loadCityShortcuts(cityName: string) {
-  if (districtsByCity.value[cityName] && categoriesByCity.value[cityName]) return
-  statsLoading.value = true
-  try {
-    const [d, c] = await Promise.all([
-      getStatsDistricts(cityName),
-      getStatsCategories(undefined, cityName),
-    ])
-    districtsByCity.value = { ...districtsByCity.value, [cityName]: d.data }
-    categoriesByCity.value = { ...categoriesByCity.value, [cityName]: c.data }
-  } catch {
-    /* 失敗不擋主流程 */
-  } finally {
-    statsLoading.value = false
-  }
-}
-
 watch(
   () => cityStore.city?.name,
   (name) => {
-    if (name) void loadCityShortcuts(name)
+    if (name) void statsStore.loadShortcuts()
   },
   { immediate: true },
 )
@@ -405,7 +385,7 @@ onMounted(() => {
           <h2 class="text-sm font-semibold text-gray-900">熱門篩選 Top {{ TOP_N }}</h2>
           <p class="mt-0.5 text-xs text-gray-500">
             點選進地圖 · 左右滑切換
-            <span v-if="statsLoading"> · 更新中…</span>
+            <span v-if="statsLoading"> · 載入中</span>
           </p>
         </div>
 
@@ -458,7 +438,22 @@ onMounted(() => {
               {{ districtRankTitle }}
               <span v-if="onlyPenalty" class="text-amber-800"> · 已套用稽查篩選</span>
             </p>
-            <ol v-if="topDistricts.length" class="divide-y divide-gray-100">
+            <ul
+              v-if="statsLoading"
+              class="divide-y divide-gray-100"
+              aria-busy="true"
+              aria-label="行政區排名載入中"
+            >
+              <li v-for="i in TOP_N" :key="`d-sk-${i}`" class="flex min-h-14 items-center gap-3 px-3 py-2.5">
+                <Sk class="h-4 w-4 shrink-0" />
+                <span class="min-w-0 flex-1 space-y-2">
+                  <Sk class="h-4 w-24" />
+                  <Sk class="h-1.5 w-full rounded-full" />
+                </span>
+                <Sk class="h-4 w-8 shrink-0" />
+              </li>
+            </ul>
+            <ol v-else-if="topDistricts.length" class="divide-y divide-gray-100">
               <li v-for="(d, idx) in topDistricts" :key="d.district">
                 <button
                   type="button"
@@ -498,7 +493,7 @@ onMounted(() => {
                 </button>
               </li>
             </ol>
-            <p v-else-if="!statsLoading" class="px-3 py-6 text-center text-xs text-gray-400">
+            <p v-else class="px-3 py-6 text-center text-xs text-gray-400">
               {{ onlyPenalty ? '此縣市暫無稽查排名資料' : '暫時無法載入行政區排名' }}
             </p>
           </div>
@@ -512,7 +507,22 @@ onMounted(() => {
               班數較多類別
               <span v-if="onlyPenalty" class="text-amber-800"> · 進地圖後套用稽查篩選</span>
             </p>
-            <ol v-if="topCategories.length" class="divide-y divide-gray-100">
+            <ul
+              v-if="statsLoading"
+              class="divide-y divide-gray-100"
+              aria-busy="true"
+              aria-label="類別排名載入中"
+            >
+              <li v-for="i in TOP_N" :key="`c-sk-${i}`" class="flex min-h-14 items-center gap-3 px-3 py-2.5">
+                <Sk class="h-4 w-4 shrink-0" />
+                <span class="min-w-0 flex-1 space-y-2">
+                  <Sk class="h-4 w-28" />
+                  <Sk class="h-1.5 w-full rounded-full" />
+                </span>
+                <Sk class="h-4 w-8 shrink-0" />
+              </li>
+            </ul>
+            <ol v-else-if="topCategories.length" class="divide-y divide-gray-100">
               <li v-for="(c, idx) in topCategories" :key="c.category">
                 <button
                   type="button"
@@ -542,7 +552,7 @@ onMounted(() => {
                 </button>
               </li>
             </ol>
-            <p v-else-if="!statsLoading" class="px-3 py-6 text-center text-xs text-gray-400">
+            <p v-else class="px-3 py-6 text-center text-xs text-gray-400">
               暫時無法載入類別排名
             </p>
           </div>

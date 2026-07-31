@@ -78,7 +78,8 @@ const summary = computed(() =>
 )
 
 onMounted(() => {
-  void store.loadAll(true)
+  // 沿用導覽 session／Pinia 快取；缺資料才打 API
+  void store.loadAll()
 })
 
 watch(
@@ -87,7 +88,7 @@ watch(
     if (!id) return
     const map = getCityDistrictMap(id)
     router.replace({ query: { district: map.defaultId } })
-    void store.loadAll(true)
+    void store.loadAll()
   },
 )
 
