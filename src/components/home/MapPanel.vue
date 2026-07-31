@@ -583,9 +583,11 @@ onMounted(() => {
       // 先載入所有 pin 圖示，再建圖層
       await loadAllPinImages(map)
 
-      // 詳情小地圖（非互動／單點）關閉叢集，避免圖釘被吃掉
+      // 詳情小地圖（非互動）關閉叢集，避免單點圖釘被吃掉。
+      // 互動地圖一律開叢集：進頁時 schools 常仍為 []，若依 length>1 判斷會永遠關著，
+      // 之後 setData 也不會重開 cluster（造成滿版密密麻麻針）。
       // clusterMaxZoom 15：overview／定位（~12–12.5）維持圈圈；再放大才變個別針
-      const enableCluster = props.interactive && props.schools.length > 1
+      const enableCluster = props.interactive
       map.addSource('schools', {
         type: 'geojson',
         data: toGeoJSON(props.schools),
