@@ -16,7 +16,6 @@
     "og:render": "node scripts/render-og.mjs"
   },
   "dependencies": {
-    "driver.js": "^1.7.0",
     "lucide-vue-next": "^1.0.0",
     "maplibre-gl": "^5.24.0",
     "pinia": "^3.0.4",

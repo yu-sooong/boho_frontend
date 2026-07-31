@@ -8,11 +8,20 @@
  * - select_map_pin（school_id）
  * - select_school（school_id, source: list|preview）
  * - view_school_detail（school_id, district, status）
- * - click_directions（school_id）
+ * - click_directions（school_id, source?）
+ * - click_phone（school_id, source?）
  * - open_review_sheet（school_id）
  * - submit_review（school_id, rating）
  * - add_to_favorites / remove_from_favorites（school_id）
+ * - compare_schools（school_a, school_b）
+ * - share_compare（school_a, school_b, method: shared|copied）
  * - share_school（school_id, method: shared|copied）
+ * - copy_address（school_id, source?）
+ * - select_city（city_id, source: dashboard|stats|find|find_map|…）
+ * - dashboard_rank_tap（type, value, penalty）
+ * - city_interest（region, newly_added）
+ * - stats_select_district（city_id, district_id, district_name, method: map|list|picker）
+ * - stats_open_map（city_id, district_id, district_name）
  */
 
 declare global {

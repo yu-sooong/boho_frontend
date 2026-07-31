@@ -14,9 +14,35 @@ const props = withDefaults(
     /** 已存在的使用者座標（從 store 傳入，避免返回頁面時重複定位並飛走） */
     userLat?: number | null
     userLng?: number | null
+    /** 地圖中心（縣市切換） */
+    center?: { lng: number; lat: number }
+    /**
+     * 地圖可視範圍 SW→NE；傳 null 表示不限制（詳情小地圖用）
+     * 未傳時預設台中範圍（相容舊用法）
+     */
+    maxBounds?: [[number, number], [number, number]] | null
   }>(),
-  { interactive: true, selectedId: null, userLat: null, userLng: null },
+  {
+    interactive: true,
+    selectedId: null,
+    userLat: null,
+    userLng: null,
+    center: () => ({ lng: 120.6736, lat: 24.1477 }),
+    maxBounds: undefined,
+  },
 )
+
+/** 首頁預設可視範圍（台中）；詳情頁應顯式傳 null */
+const DEFAULT_MAX_BOUNDS: [[number, number], [number, number]] = [
+  [120.25, 23.88],
+  [121.35, 24.55],
+]
+
+const resolvedMaxBounds = (): [[number, number], [number, number]] | null => {
+  if (props.maxBounds === null) return null
+  if (props.maxBounds === undefined) return DEFAULT_MAX_BOUNDS
+  return props.maxBounds
+}
 
 const emit = defineEmits<{
   select: [id: string]
@@ -25,7 +51,7 @@ const emit = defineEmits<{
   ready: []
 }>()
 
-defineExpose({ fitToSchools, flyToUser })
+defineExpose({ fitToSchools, flyToUser, resetToCity })
 
 const container = ref<HTMLDivElement | null>(null)
 const geo = useGeolocation()
@@ -156,17 +182,14 @@ async function loadAllPinImages(m: maplibregl.Map): Promise<void> {
   ])
 }
 
-// ── 可視範圍（台中＋外圍緩衝，避免拖到全世界／世界副本重複標記）──────────────
-/** SW → NE；略大於台中市界，方便看鄰近地帶，但不能縮到全球 */
-const TAICHUNG_MAX_BOUNDS: [[number, number], [number, number]] = [
-  [120.25, 23.88],
-  [121.35, 24.55],
-]
+// ── 可視範圍（依縣市 maxBounds，避免拖到全世界）──────────────────────────────
 const MAP_MIN_ZOOM = 9.5
 const MAP_MAX_ZOOM = 18
 
-function isInsideTaichung(lng: number, lat: number): boolean {
-  const [[west, south], [east, north]] = TAICHUNG_MAX_BOUNDS
+function isInsideBounds(lng: number, lat: number): boolean {
+  const bounds = resolvedMaxBounds()
+  if (!bounds) return true
+  const [[west, south], [east, north]] = bounds
   return lng >= west && lng <= east && lat >= south && lat <= north
 }
 
@@ -381,7 +404,7 @@ function setupEvents() {
         .setHTML(
           `<div class="popup-name">${name}</div>` +
           (categories ? `<div class="popup-cats">${categories}</div>` : '') +
-          (hasPenalty ? `<div class="popup-penalty">有稽查紀錄</div>` : ''),
+          (hasPenalty ? `<div class="popup-penalty">有公開稽查紀錄</div>` : ''),
         )
         .addTo(map)
     })
@@ -410,9 +433,26 @@ function fitToSchools(schools: School[] = props.schools) {
   map.fitBounds(bounds, { padding: 64, maxZoom: 14, minZoom: 11, duration: 600 })
 }
 
-function flyToUser() {
-  if (!lastUserCoords || !map) return
+/** 回到目前縣市中心（找班預設視角；避免 GPS 在範圍外被 maxBounds 夾到山區） */
+function resetToCity(zoom = 12) {
+  if (!map) return
+  map.flyTo({
+    center: [props.center.lng, props.center.lat],
+    zoom,
+    duration: 600,
+  })
+}
+
+/**
+ * 飛到使用者位置；僅當座標在目前縣市 maxBounds 內才飛。
+ * 否則 MapLibre 會把目標夾到邊界（高雄常夾到曾文溪一帶空山區）。
+ */
+function flyToUser(): boolean {
+  if (!lastUserCoords || !map) return false
+  const [lng, lat] = lastUserCoords
+  if (!isInsideBounds(lng, lat)) return false
   map.flyTo({ center: lastUserCoords, zoom: 14, duration: 800 })
+  return true
 }
 
 // ── 選中狀態更新 ─────────────────────────────────────────────────────────────
@@ -448,15 +488,33 @@ function placeUserMarker(lng: number, lat: number) {
 }
 
 /** @param fly 是否飛到使用者位置；返回頁面還原時可設 false */
-async function onLocate(fly = true) {
+const locateHint = ref<string | null>(null)
+let locateHintTimer = 0
+
+function showLocateHint(msg: string) {
+  locateHint.value = msg
+  window.clearTimeout(locateHintTimer)
+  locateHintTimer = window.setTimeout(() => {
+    locateHint.value = null
+  }, 4200)
+}
+
+async function onLocate(fly = true, opts: { quiet?: boolean } = {}) {
   if (geo.isLoading.value) return
+  if (!opts.quiet) locateHint.value = null
   const coords = await geo.request()
-  if (!coords || !map) return
+  if (!coords || !map) {
+    // 首次自動定位失敗保持安靜；使用者點按鈕才提示
+    if (!opts.quiet) showLocateHint(geo.error.value ?? '定位失敗，請稍後再試')
+    return
+  }
 
   placeUserMarker(coords.lng, coords.lat)
-  // 定位在台中外（例如出差）：仍放標記，但不飛出 maxBounds
-  if (fly && isInsideTaichung(coords.lng, coords.lat)) {
+  // 定位在目前縣市範圍外：仍放標記，但不飛出 maxBounds
+  if (fly && isInsideBounds(coords.lng, coords.lat)) {
     map.flyTo({ center: [coords.lng, coords.lat], zoom: 14, duration: 1200 })
+  } else if (fly && !isInsideBounds(coords.lng, coords.lat)) {
+    showLocateHint('目前位置在查詢縣市外，已標示但不移動地圖')
   }
   emit('located', coords)
 }
@@ -471,7 +529,7 @@ onMounted(() => {
     ? validSchools.find((s) => s.id === props.selectedId)
     : null
 
-  let initCenter: [number, number] = [120.6469, 24.1697]
+  let initCenter: [number, number] = [props.center.lng, props.center.lat]
   let initZoom = 12
 
   if (selectedSchool) {
@@ -483,14 +541,15 @@ onMounted(() => {
   }
 
   try {
+    const bounds = resolvedMaxBounds()
     map = new maplibregl.Map({
       container: container.value,
       style: BASEMAP_STYLE,
       center: initCenter,
       zoom: initZoom,
-      minZoom: MAP_MIN_ZOOM,
+      minZoom: props.interactive ? MAP_MIN_ZOOM : 10,
       maxZoom: MAP_MAX_ZOOM,
-      maxBounds: TAICHUNG_MAX_BOUNDS,
+      ...(bounds ? { maxBounds: bounds } : {}),
       renderWorldCopies: false,
       attributionControl: false,
       interactive: props.interactive,
@@ -516,10 +575,12 @@ onMounted(() => {
       // 先載入所有 pin 圖示，再建圖層
       await loadAllPinImages(map)
 
+      // 詳情小地圖（非互動／單點）關閉叢集，避免圖釘被吃掉
+      const enableCluster = props.interactive && props.schools.length > 1
       map.addSource('schools', {
         type: 'geojson',
         data: toGeoJSON(props.schools),
-        cluster: true,
+        cluster: enableCluster,
         clusterMaxZoom: 14,
         clusterRadius: 40,
         clusterProperties: {
@@ -531,13 +592,12 @@ onMounted(() => {
       setupEvents()
       updateSelectedFilter()
 
-      // 已有定位：只放標記，不飛走（避免從詳情頁返回時蓋掉篩選視角）
-      // 尚未定位：首次自動定位並飛到附近
+      // 已有定位：只放標記。首次自動定位也不搶鏡頭（由 HomeView 決定縣市中心／附近）
       if (props.interactive) {
         if (props.userLat != null && props.userLng != null) {
           placeUserMarker(props.userLng, props.userLat)
         } else {
-          setTimeout(() => onLocate(true), 600)
+          setTimeout(() => onLocate(false, { quiet: true }), 600)
         }
       }
 
@@ -552,6 +612,7 @@ onMounted(() => {
 })
 
 onBeforeUnmount(() => {
+  window.clearTimeout(locateHintTimer)
   resizeObserver?.disconnect()
   userMarker?.remove()
   hoverPopup?.remove()
@@ -591,26 +652,39 @@ watch(() => props.selectedId, updateSelectedFilter)
       </a>
     </div>
 
-    <!-- 定位按鈕 -->
-    <button
+    <!-- 定位：手機避開頂部搜尋列與底欄，桌面維持右上 -->
+    <div
       v-if="interactive && !mapFailed"
-      type="button"
-      class="absolute right-3 top-3 z-20 flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-gray-50 disabled:opacity-50"
-      :disabled="geo.isLoading.value"
-      title="重新定位我的位置"
-      aria-label="重新定位我的位置"
-      @click="() => onLocate(true)"
+      class="absolute right-3 z-20 flex flex-col items-end gap-1.5 bottom-[max(7.5rem,calc(env(safe-area-inset-bottom,0px)+6.25rem))] md:top-3 md:bottom-auto"
     >
-      <Loader2 v-if="geo.isLoading.value" :size="18" class="animate-spin text-primary-700" />
-      <Locate v-else :size="18" class="text-gray-600" />
-    </button>
+      <p
+        v-if="locateHint"
+        class="max-w-[14rem] rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1.5 text-[11px] leading-snug text-amber-900 shadow"
+        role="status"
+        data-testid="locate-hint"
+      >
+        {{ locateHint }}
+      </p>
+      <button
+        type="button"
+        class="flex h-10 w-10 items-center justify-center rounded-full bg-white shadow-md transition-colors hover:bg-gray-50 disabled:opacity-50 md:shadow-md"
+        :disabled="geo.isLoading.value"
+        title="重新定位我的位置"
+        aria-label="重新定位我的位置"
+        data-testid="map-locate"
+        @click="() => onLocate(true)"
+      >
+        <Loader2 v-if="geo.isLoading.value" :size="18" class="animate-spin text-primary-700" />
+        <Locate v-else :size="18" class="text-gray-600" />
+      </button>
+    </div>
 
-    <!-- 手機：僅稽查提示（避開中央 FAB） -->
+    <!-- 手機：僅稽查提示（避開底欄與列表 FAB） -->
     <div
       v-if="interactive && !mapFailed && schools.length > 0"
-      class="pointer-events-none absolute bottom-24 left-3 z-10 max-w-[11rem] rounded-md border border-amber-200/80 bg-white/92 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 shadow backdrop-blur-sm md:hidden"
+      class="pointer-events-none absolute left-3 z-10 max-w-[11rem] rounded-md border border-amber-200/80 bg-white/92 px-2.5 py-1.5 text-[11px] font-medium text-amber-900 shadow backdrop-blur-sm bottom-[max(7.5rem,calc(env(safe-area-inset-bottom,0px)+6.25rem))] md:hidden"
     >
-      橘外圈＝有稽查紀錄
+      橘外圈＝有公開稽查紀錄
     </div>
 
     <!-- 類別顏色圖例（桌面才顯示） -->
@@ -650,7 +724,7 @@ watch(() => props.selectedId, updateSelectedFilter)
           />
           <circle cx="14" cy="14" r="5" fill="white" opacity="0.9"/>
         </svg>
-        <span>橘外圈＝有稽查</span>
+        <span>橘外圈＝公開稽查</span>
       </div>
     </div>
 

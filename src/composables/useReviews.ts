@@ -2,6 +2,7 @@ import { trackEvent } from '@/analytics'
 import { ApiError } from '@/api/client'
 import { createReview, getSchoolReviews, mapApiReview } from '@/api/reviews'
 import { getDeviceId } from '@/composables/useDeviceId'
+import { REVIEW_CONTENT_MAX } from '@/data/reviewConstants'
 import type { Review, ReviewSubmitPayload } from '@/types'
 import {
   computed,
@@ -82,21 +83,23 @@ export function useReviews(schoolId: MaybeRefOrGetter<string>) {
 
   async function submitReview(payload: ReviewSubmitPayload): Promise<Review> {
     const content = payload.content.trim()
-    if (!payload.identity || !payload.period) {
-      throw new Error('請選擇身份與就讀／接觸時期')
+    if (!payload.identity) {
+      throw new Error('請選擇身份')
     }
     if (payload.rating < 1 || payload.rating > 5) {
       throw new Error('請選擇星等評分')
     }
-    if (content.length < 15) {
-      throw new Error('請至少寫下 15 字的具體經驗')
+    if (!content) {
+      throw new Error('請寫下你的經驗')
+    }
+    if (content.length > REVIEW_CONTENT_MAX) {
+      throw new Error(`內容請勿超過 ${REVIEW_CONTENT_MAX} 字`)
     }
 
     try {
       const result = await createReview({
         schoolId: payload.schoolId,
         identity: payload.identity,
-        period: payload.period,
         rating: Math.round(Number(payload.rating)),
         content,
         tags: payload.tags,

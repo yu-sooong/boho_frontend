@@ -15,8 +15,10 @@ defineProps<{
       <div>
         <p class="text-sm font-medium text-gray-900">
           {{ identityLabel(review.identity) }}
-          <span class="font-normal text-gray-400">・</span>
-          <span class="font-normal text-gray-500">{{ periodLabel(review.period) }}</span>
+          <template v-if="review.period && periodLabel(review.period)">
+            <span class="font-normal text-gray-400">・</span>
+            <span class="font-normal text-gray-500">{{ periodLabel(review.period) }}</span>
+          </template>
         </p>
         <p class="mt-0.5 text-xs text-gray-400">{{ review.date }}</p>
       </div>

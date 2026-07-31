@@ -32,6 +32,14 @@ export default defineConfig({
       grep: /手機/,
     },
     {
+      name: 'find-ux',
+      use: {
+        ...devices['Pixel 5'],
+        browserName: 'chromium',
+      },
+      testMatch: /find-ux\.spec\.ts/,
+    },
+    {
       // 行銷直式片：viewport 必須 == video.size、且為 9:16；
       // deviceScaleFactor 必須為 1，否則畫面會縮在左上、周圍灰底（Playwright 已知行為）。
       // 720≤767 → 仍走手機版面；compose 再套 3D 手機外框並輸出 1080×1920。
@@ -67,6 +75,21 @@ export default defineConfig({
       },
       testMatch: /(?:remote-qa-monkey|detail-api-count)\.spec\.ts/,
       timeout: 120_000,
+    },
+    {
+      name: 'local-qa',
+      use: {
+        browserName: 'chromium',
+        baseURL: 'http://127.0.0.1:5173',
+        viewport: { width: 390, height: 844 },
+        locale: 'zh-TW',
+        geolocation: { latitude: 24.1477, longitude: 120.6736 },
+        permissions: ['geolocation'],
+        screenshot: 'only-on-failure',
+        trace: 'retain-on-failure',
+      },
+      testMatch: /local-qa-monkey\.spec\.ts/,
+      timeout: 180_000,
     },
   ],
 })

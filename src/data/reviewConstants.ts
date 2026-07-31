@@ -1,4 +1,4 @@
-/** 評價投稿：身份／時期選項與審核說明文案 */
+/** 評價投稿：身份選項與審核說明文案 */
 
 export const REVIEW_IDENTITIES = [
   { value: 'parent', label: '家長' },
@@ -7,6 +7,7 @@ export const REVIEW_IDENTITIES = [
   { value: 'other', label: '其他' },
 ] as const
 
+/** 舊資料可能仍有時期欄位；新投稿不再收集 */
 export const REVIEW_PERIODS = [
   { value: 'current', label: '目前就讀中' },
   { value: 'within_1y', label: '一年內曾就讀' },
@@ -16,6 +17,9 @@ export const REVIEW_PERIODS = [
 
 export type ReviewIdentity = (typeof REVIEW_IDENTITIES)[number]['value']
 export type ReviewPeriod = (typeof REVIEW_PERIODS)[number]['value']
+
+/** 與後端 MAX_CONTENT 一致 */
+export const REVIEW_CONTENT_MAX = 1000
 
 export const REVIEW_FEATURE_OPTIONS = [
   '老師耐心',
@@ -29,7 +33,7 @@ export const REVIEW_FEATURE_OPTIONS = [
 
 export const REVIEW_POLICY = {
   title: '評價怎麼審核',
-  intro: '採匿名投稿、人工審核。公開時只顯示身份與就讀／接觸時期，不會露出你的真實身分。',
+  intro: '採匿名投稿、人工審核。公開時只顯示身份，不會露出你的真實身分。',
   points: [
     '送出後先進入待審；通過後才會顯示在補習班頁面。',
     '審核通常約 3 個工作天；未通過則不會刊出，也不會另行通知。',
@@ -48,6 +52,7 @@ export function identityLabel(value: ReviewIdentity): string {
   return REVIEW_IDENTITIES.find((i) => i.value === value)?.label ?? '使用者'
 }
 
-export function periodLabel(value: ReviewPeriod): string {
+export function periodLabel(value: ReviewPeriod | undefined): string {
+  if (!value) return ''
   return REVIEW_PERIODS.find((p) => p.value === value)?.label ?? ''
 }

@@ -123,7 +123,7 @@ onMounted(() => {
             <p class="text-xs text-gray-400">{{ r.date }}・★ {{ r.rating }}</p>
           </div>
           <p class="mt-1 text-sm text-gray-500">
-            {{ identityLabel(r.identity) }}・{{ periodLabel(r.period) }}
+            {{ identityLabel(r.identity) }}<template v-if="r.period && periodLabel(r.period)">・{{ periodLabel(r.period) }}</template>
           </p>
           <p class="mt-3 text-sm leading-relaxed text-gray-700">{{ r.content }}</p>
           <p v-if="r.tags?.length" class="mt-2 text-xs text-gray-400">

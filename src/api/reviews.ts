@@ -6,7 +6,7 @@ export interface ApiReview {
   id: string
   schoolId: string
   identity: ReviewIdentity
-  period: ReviewPeriod
+  period?: ReviewPeriod
   rating: number
   content: string
   tags: string[]
@@ -31,7 +31,6 @@ export interface ApiReviewsResult {
 export interface SubmitReviewBody {
   schoolId: string
   identity: ReviewIdentity
-  period: ReviewPeriod
   rating: number
   content: string
   tags: string[]

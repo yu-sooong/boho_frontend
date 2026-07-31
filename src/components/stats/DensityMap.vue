@@ -1,12 +1,14 @@
 <script setup lang="ts">
-import { taichungDistricts, taichungViewBox } from '@/data/taichungDistricts'
+import type { CityDistrict } from '@/data/districtMeta'
 import { densityScale } from '@/utils/dataVizColors'
 import { computed, ref } from 'vue'
 
 const props = withDefaults(
   defineProps<{
     selectedId: string
-    /** 行政區名 → 班數（真實 API） */
+    districts: CityDistrict[]
+    viewBox: string
+    /** 行政區名 → 班數 */
     countsByName?: Record<string, number>
     /** 行政區名 → 0~1 密度 */
     densityByName?: Record<string, number>
@@ -47,7 +49,7 @@ function centroidOf(path: string): { x: number; y: number } {
 }
 
 const districts = computed(() =>
-  taichungDistricts.map((d) => {
+  props.districts.map((d) => {
     const centroid = centroidOf(d.path)
     const schoolCount = props.countsByName[d.name] ?? 0
     const density = props.densityByName[d.name] ?? 0
@@ -81,9 +83,10 @@ function onClick(id: string) {
   emit('select', id)
 }
 
-const [vbMinX, vbMinY, vbW, vbH] = taichungViewBox.split(' ').map(Number)
+const vbParts = computed(() => props.viewBox.split(' ').map(Number))
 const tooltipStyle = computed(() => {
   if (!activeDistrict.value) return {}
+  const [vbMinX, vbMinY, vbW, vbH] = vbParts.value
   const left = ((activeDistrict.value.cx - vbMinX) / vbW) * 100
   const top = ((activeDistrict.value.cy - vbMinY) / vbH) * 100
   return { left: `${left}%`, top: `${top}%` }
@@ -102,7 +105,7 @@ function liftTransform(d: { cx: number; cy: number }) {
 <template>
   <div class="relative mx-auto w-full max-w-3xl select-none">
     <svg
-      :viewBox="taichungViewBox"
+      :viewBox="viewBox"
       class="h-auto w-full overflow-visible"
       preserveAspectRatio="xMidYMid meet"
     >

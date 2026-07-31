@@ -1,18 +1,20 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import BottomTabBar from '@/components/layout/BottomTabBar.vue'
+import SiteFooter from '@/components/layout/SiteFooter.vue'
 import {
   BarChart2,
   BookOpen,
   Bookmark,
   ChevronRight,
   Info,
+  LayoutGrid,
   Mail,
   MapPin,
   MessageSquareText,
   Scale,
   Shield,
-  Sparkles,
+  SlidersHorizontal,
 } from 'lucide-vue-next'
 import { SITE_URL } from '@/config/site'
 import { usePageSeo } from '@/composables/usePageSeo'
@@ -20,37 +22,38 @@ import { usePageSeo } from '@/composables/usePageSeo'
 usePageSeo({
   title: '更多 | 補亦樂乎',
   description:
-    '探索補亦樂乎功能、常見問題與說明條款。台中市補習班地圖、立案狀態與稽查資訊一站查詢。',
+    '探索補亦樂乎功能、常見問題與說明條款。台中、新北、高雄補習班地圖、立案狀態與稽查資訊一站查詢。',
   ogTitle: '更多 | 補亦樂乎',
   ogUrl: `${SITE_URL}/more`,
 })
 
 const features = [
-  { label: '找補習班', sub: '地圖與列表雙模式搜尋', icon: MapPin, to: '/' },
+  { label: '導覽', sub: '選縣市、快速找班入口', icon: LayoutGrid, to: '/' },
+  { label: '找班', sub: '地圖與列表雙模式搜尋', icon: MapPin, to: '/find' },
   { label: '地區情報', sub: '各區密度統計分析', icon: BarChart2, to: '/district-stats' },
   { label: '我的收藏', sub: '儲存關注的補習班', icon: Bookmark, to: '/favorites' },
   { label: '文章專區', sub: '選班指南與實用文章', icon: BookOpen, to: '/guide' },
-  { label: 'AI 選班', sub: '依需求推薦適合的班', icon: Sparkles, to: '/ai-pick' },
+  { label: 'AI 選班', sub: '規劃中・請先用找班與指南', icon: SlidersHorizontal, to: '/ai-pick' },
 ]
 
 const infoLinks = [
-  { label: '關於我們', icon: Info, to: '/more/about', sub: '為什麼要蒐集家長與學生評價' },
-  { label: '評價怎麼審核', icon: MessageSquareText, to: '/more/review-policy', sub: '' },
-  { label: '聯絡我們', icon: Mail, to: '/more/contact', sub: '' },
-  { label: '隱私權政策', icon: Shield, to: '/more/privacy', sub: '' },
-  { label: '服務條款', icon: Scale, to: '/more/terms', sub: '' },
+  { label: '關於我們', icon: Info, to: '/more/about', sub: '公開資料彙整與找班工具' },
+  { label: '評價怎麼審核', icon: MessageSquareText, to: '/more/review-policy', sub: '投稿規範與審核說明' },
+  { label: '聯絡我們', icon: Mail, to: '/more/contact', sub: '回報錯誤或合作洽詢' },
+  { label: '隱私權政策', icon: Shield, to: '/more/privacy', sub: '個資與 Cookie 說明' },
+  { label: '服務條款', icon: Scale, to: '/more/terms', sub: '使用規範與免責' },
 ]
 
 const stats = [
-  { value: '2,800+', label: '立案補習班' },
-  { value: '29', label: '台中市行政區' },
+  { value: '3', label: '開查縣市' },
+  { value: '96', label: '行政區' },
   { value: '持續更新', label: '資料來源' },
 ]
 
 const faqs = [
   {
     q: '資料來源是哪裡？',
-    a: '基本資料來自教育部與台中市政府等開放資料；稽查紀錄摘錄自主管機關公告，並定期同步。本平台非主管機關。機關網站改版後，原始連結可能失效，內容若有出入以各機關最新公告為準。',
+    a: '基本資料來自教育部與各縣市政府等開放資料；稽查紀錄摘錄自主管機關公告（台中、新北已匯入；高雄尚無可解析清冊），並定期同步。本平台非主管機關。機關網站改版後，原始連結可能失效，內容若有出入以各機關最新公告為準。',
   },
   {
     q: '評價是真實的嗎？',
@@ -101,7 +104,7 @@ const faqs = [
             class="mt-3 text-[13px] italic leading-relaxed tracking-wide"
             style="color: rgba(200,235,228,0.6)"
           >
-            以透明資訊，陪伴每位家長做出最好的決定
+            以可核對的公開資訊，陪伴家長做決定
           </p>
           <div
             class="mt-6 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs tracking-wider"
@@ -133,7 +136,7 @@ const faqs = [
               <div class="mb-5 h-px bg-gray-100" />
               <div class="space-y-3 text-sm leading-relaxed text-gray-600">
                 <p>
-                  我們想蒐集更多家長與學生的真實評價——實際上過課的人怎麼說，往往最有參考價值。同時彙整台中市立案與稽查公開資訊，並朝向以這些資料協助 AI 選班。
+                  我們想蒐集更多家長與學生的真實評價——實際上過課的人怎麼說，往往最有參考價值。同時彙整台中、新北、高雄的立案與稽查公開資訊，並朝向以這些資料協助 AI 選班。
                 </p>
                 <p>
                   評價採匿名投稿與人工審核，正面與需要改進的經驗都保留；我們不販售置頂或業配排序。
@@ -211,7 +214,7 @@ const faqs = [
                   </div>
                   <div class="min-w-0 flex-1">
                     <p class="text-[14px] font-medium text-gray-900">{{ item.label }}</p>
-                    <p v-if="item.sub" class="text-xs text-gray-500">{{ item.sub }}</p>
+                    <p class="text-xs text-gray-500">{{ item.sub }}</p>
                   </div>
                   <ChevronRight :size="15" class="shrink-0 text-gray-200 transition-colors group-hover:text-gray-400" />
                 </RouterLink>
@@ -222,34 +225,7 @@ const faqs = [
       </div>
     </div>
 
-    <footer class="border-t border-gray-100 bg-white">
-      <div class="mx-auto max-w-5xl px-8 py-5">
-        <div class="flex flex-col items-center gap-2 md:flex-row md:justify-between">
-          <div class="flex items-center gap-2 text-xs text-gray-400">
-            <span class="font-medium text-gray-600">補亦樂乎</span>
-            <span class="text-gray-200">|</span>
-            <span>v1.0.0</span>
-          </div>
-          <p class="text-xs text-gray-400">© 2026 補亦樂乎 · All Rights Reserved.</p>
-          <div class="hidden items-center gap-4 text-xs text-gray-400 md:flex">
-            <RouterLink to="/more/about" class="hover:text-gray-600">關於我們</RouterLink>
-            <span class="text-gray-200">·</span>
-            <RouterLink to="/more/privacy" class="hover:text-gray-600">隱私權政策</RouterLink>
-            <span class="text-gray-200">·</span>
-            <RouterLink to="/more/terms" class="hover:text-gray-600">服務條款</RouterLink>
-            <span class="text-gray-200">·</span>
-            <RouterLink to="/more/contact" class="hover:text-gray-600">聯絡我們</RouterLink>
-          </div>
-        </div>
-        <div class="mt-3 border-t border-gray-50 pt-3">
-          <p class="text-center text-[10px] leading-relaxed text-gray-500 md:text-left">
-            資料來源：臺中市政府資料開放平臺《臺中市立案補習班資料》、教育部終身教育司（data.gov.tw #16461）、「直轄市及各縣市短期補習班」資訊管理系統（bsb.kh.edu.tw）、臺中市政府教育局《補習班稽查違規清冊》。
-            均依政府資料開放授權條款第 1 版或各機關公告授權使用。
-            <RouterLink to="/more/about" class="underline hover:text-gray-700">查看完整資料來源</RouterLink>
-          </p>
-        </div>
-      </div>
-    </footer>
+    <SiteFooter show-sources class="pb-20 md:pb-0" />
     <BottomTabBar />
   </div>
 </template>

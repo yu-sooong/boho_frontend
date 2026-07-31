@@ -1,60 +1,46 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import BottomTabBar from '@/components/layout/BottomTabBar.vue'
+import SiteFooter from '@/components/layout/SiteFooter.vue'
 import SubpageHeader from '@/components/layout/SubpageHeader.vue'
 import { SITE_URL } from '@/config/site'
 import { usePageSeo } from '@/composables/usePageSeo'
-import {
-  BookOpen,
-  ExternalLink,
-  MapPinned,
-  MessageCircleHeart,
-  ShieldCheck,
-  Sparkles,
-  Star,
-  ThumbsUp,
-} from 'lucide-vue-next'
+import { ExternalLink } from 'lucide-vue-next'
 import { RouterLink } from 'vue-router'
 
 usePageSeo({
-  title: '關於補亦樂乎 | 台中補教情報地圖',
+  title: '關於補亦樂乎 | 補教情報地圖',
   description:
-    '補亦樂乎致力蒐集更多家長與學生的真實評價，並彙整台中市立案補習班公開資訊；未來再以這些口碑協助 AI 選班，讓孩子更容易找到適合的學習資源。',
-  ogTitle: '關於補亦樂乎｜蒐集真實家長與學生評價',
+    '補亦樂乎彙整台中、新北、高雄立案補習班公開資訊，並審核後刊登家長與學生評價，協助報名前自行核對；AI 選班功能規劃中。',
+  ogTitle: '關於補亦樂乎｜公開資料與審核後評價',
   ogUrl: `${SITE_URL}/more/about`,
 })
 
 const storySteps = [
   {
-    icon: MapPinned,
-    title: '彙整台中市立案補習班',
-    desc: '把公開資料放進同一張地圖與列表，讓你先確認立案狀態與稽查紀錄，再決定要不要預約參觀。',
+    title: '彙整多縣市立案補習班',
+    desc: '目前涵蓋台中、新北、高雄：把公開資料放進同一張地圖與列表，方便先核對立案狀態與公開稽查紀錄，再自行決定要不要預約參觀。',
   },
   {
-    icon: MessageCircleHeart,
     title: '盡力蒐集更多家長與學生評價',
     desc: '邀請實際上過課的家長、學生留下留言與星等。匿名投稿、經人工審核後公開；正面與需要改進的經驗都歡迎，重點是具體、可核對的親身感受。',
   },
   {
-    icon: Sparkles,
-    title: '用這些評價協助找到更好資源',
-    desc: '評價累積得越完整，比較才越有意義。下一步是 AI 選班：把公開資訊與審核後的家長／學生口碑變成依據，依孩子需求推薦更適合的選擇。（功能準備中）',
+    title: '用這些評價協助比對資源',
+    desc: '評價累積得越完整，並排對照才更有參考價值。下一步是 AI 選班：把公開資訊與審核後的家長／學生口碑整理成可篩選條件，依孩子需求列出候選選項。（功能準備中）',
   },
 ]
 
 const promises = [
   {
-    icon: ThumbsUp,
     title: '不業配、不置頂',
-    desc: '若出現廣告，由 Google 自動投放，與補習班排序、查核結果無關。我們不向業者收取曝光或置頂費用，排序不販售。',
+    desc: '若出現廣告，由 Google 自動投放，與補習班排序、列表呈現無關。我們不向業者收取曝光或置頂費用，排序不販售。',
   },
   {
-    icon: Star,
     title: '依標準審核、正負並陳',
     desc: '符合審核標準的親身經驗——不論正負——都會公開。業者回應功能尚在規劃；若對內容有異議，可透過「聯絡我們」提出，我們會依審核規則處理。',
   },
   {
-    icon: ShieldCheck,
     title: '來源可考',
     desc: '立案狀態與稽查紀錄來自政府公開資料與主管機關公告，標明來源與日期，並提供原始連結供自行核對。',
   },
@@ -101,6 +87,22 @@ const dataSources = [
     licenseUrl: '',
     note: '',
   },
+  {
+    agency: '新北市政府教育局（社會教育資源網）',
+    dataset: '立案補習班稽查情形公告（PDF）',
+    license: '法定應公開資訊（《短期補習班設立及管理準則》第 31 條）',
+    url: 'https://lll.ntpc.edu.tw/Module/Bulletin/Business.php?BID=5',
+    licenseUrl: '',
+    note: '僅匯入有違規／裁處的列；「暫無缺失」不列入。事由類型不一，請看原文。',
+  },
+  {
+    agency: '高雄市政府教育局',
+    dataset: '補習班稽查／裁罰公開清冊',
+    license: '—',
+    url: 'https://www.kh.edu.tw/',
+    licenseUrl: '',
+    note: '目前尚無與台中／新北同級、可穩定解析的公開清冊；本站高雄僅提供立案等資料。有公開後會再匯入。',
+  },
 ]
 </script>
 
@@ -108,7 +110,7 @@ const dataSources = [
   <div class="flex min-h-screen flex-col">
     <AppHeader />
 
-    <div class="flex-1 pb-20 md:pb-10">
+    <div class="flex-1">
       <SubpageHeader title="關於補亦樂乎" />
 
       <div class="mx-auto max-w-xl space-y-6 px-4 py-5 md:px-6">
@@ -141,11 +143,11 @@ const dataSources = [
               class="mt-4 flex flex-wrap items-center gap-x-3 gap-y-1 text-xs"
               style="color: rgba(255,255,255,0.55)"
             >
-              <span>台中市範圍</span>
+              <span>台中・新北・高雄</span>
               <span style="color: rgba(255,255,255,0.25)">·</span>
-              <span>2,800+ 立案補習班</span>
+              <span>96 個行政區</span>
               <span style="color: rgba(255,255,255,0.25)">·</span>
-              <span>29 個行政區</span>
+              <span>公開資料持續更新</span>
             </div>
           </div>
         </div>
@@ -168,15 +170,10 @@ const dataSources = [
             <div
               v-for="step in storySteps"
               :key="step.title"
-              class="flex gap-3.5 rounded-md border border-gray-200 bg-white p-4"
+              class="rounded-md border border-gray-200 border-l-[3px] border-l-primary-600 bg-white px-4 py-3.5"
             >
-              <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-50">
-                <component :is="step.icon" :size="17" class="text-primary-700" />
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-900">{{ step.title }}</p>
-                <p class="mt-1 text-sm leading-relaxed text-gray-500">{{ step.desc }}</p>
-              </div>
+              <p class="text-sm font-semibold text-gray-900">{{ step.title }}</p>
+              <p class="mt-1.5 text-sm leading-relaxed text-gray-500">{{ step.desc }}</p>
             </div>
           </div>
         </div>
@@ -184,7 +181,7 @@ const dataSources = [
         <div class="rounded-md border border-primary-100 bg-primary-50/60 px-4 py-4">
           <p class="text-sm font-semibold text-gray-900">歡迎留下你的經驗</p>
           <p class="mt-1.5 text-sm leading-relaxed text-gray-600">
-            若你是家長或學生，上過某間台中補習班，歡迎到該班詳情頁投稿評價。每一則經審核的具體心得，都能幫助下一位家長把選擇看得更清楚。
+            若你是家長或學生，上過本站涵蓋縣市的補習班，歡迎到該班詳情頁投稿評價。每一則經審核的具體心得，都能幫助下一位家長把選擇看得更清楚。
           </p>
           <RouterLink
             to="/"
@@ -196,21 +193,15 @@ const dataSources = [
 
         <div>
           <p class="mb-3 text-xs font-medium text-gray-500">我們的承諾</p>
-          <div class="space-y-3">
+          <div class="overflow-hidden rounded-md border border-gray-200 bg-white">
             <div
-              v-for="p in promises"
+              v-for="(p, idx) in promises"
               :key="p.title"
-              class="flex gap-3.5 rounded-md border border-gray-200 bg-white p-4"
+              class="px-4 py-3.5"
+              :class="idx < promises.length - 1 ? 'border-b border-gray-100' : ''"
             >
-              <div
-                class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary-50"
-              >
-                <component :is="p.icon" :size="17" class="text-primary-700" />
-              </div>
-              <div>
-                <p class="text-sm font-semibold text-gray-900">{{ p.title }}</p>
-                <p class="mt-1 text-sm leading-relaxed text-gray-500">{{ p.desc }}</p>
-              </div>
+              <p class="text-sm font-semibold text-gray-900">{{ p.title }}</p>
+              <p class="mt-1.5 text-sm leading-relaxed text-gray-500">{{ p.desc }}</p>
             </div>
           </div>
         </div>
@@ -269,20 +260,10 @@ const dataSources = [
           </p>
         </div>
 
-        <div class="rounded-md border border-gray-200 bg-white px-4 py-4">
-          <div class="flex items-center gap-3">
-            <div class="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-gray-50">
-              <BookOpen :size="16" class="text-gray-500" />
-            </div>
-            <div>
-              <p class="text-sm font-medium text-gray-800">補亦樂乎 v1.0.0</p>
-              <p class="text-xs text-gray-500">© 2026 補亦樂乎 · 台灣</p>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
+    <SiteFooter class="pb-20 md:pb-0" />
     <BottomTabBar />
   </div>
 </template>

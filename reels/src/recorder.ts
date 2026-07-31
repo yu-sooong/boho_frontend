@@ -29,40 +29,23 @@ async function waitForHomeReady(page: Page) {
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 12_000 }).catch(() => {})
 }
 
-async function clickTourNext(page: Page) {
-  const next = page.locator('.driver-popover-next-btn')
-  await next.waitFor({ state: 'visible', timeout: 8_000 })
-  await next.click()
-}
-
-async function runSlowTour(page: Page) {
-  await page.locator('.driver-popover').waitFor({ state: 'visible', timeout: 15_000 })
-  await sleep(2200)
-  for (let i = 0; i < 4; i++) {
-    await clickTourNext(page)
-    await sleep(2100)
-  }
-  await clickTourNext(page)
-  await page.locator('.driver-popover').waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
-  await sleep(600)
-}
-
 async function runDemoFlow(page: Page) {
   const t0 = Date.now()
   const TARGET_MS = 48_000
 
   await page.addInitScript(() => {
     try {
-      localStorage.removeItem('buyu:homeTourDone')
+      localStorage.setItem('buyu:selected-city', 'taichung')
+      localStorage.setItem('buyu:city-onboarded', '1')
       localStorage.removeItem('buyu:favorites')
     } catch {
       // ignore
     }
   })
 
-  await page.goto(`${RECORD_BASE_URL}/`, { waitUntil: 'domcontentloaded' })
+  await page.goto(`${RECORD_BASE_URL}/find`, { waitUntil: 'domcontentloaded' })
   await waitForHomeReady(page)
-  await runSlowTour(page)
+  await sleep(2200)
 
   const search = page.getByRole('searchbox', { name: '搜尋補習班名稱或地址' }).first()
   await search.click()
@@ -80,7 +63,7 @@ async function runDemoFlow(page: Page) {
   await sleep(700)
   await page.getByRole('button', { name: '西屯區', exact: true }).click()
   await sleep(900)
-  await page.getByRole('button', { name: '套用篩選' }).click()
+  await page.getByRole('button', { name: /套用/ }).click()
   await sleep(1400)
 
   await page.getByRole('button', { name: '地圖' }).click()

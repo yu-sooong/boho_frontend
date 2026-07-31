@@ -1,17 +1,15 @@
 <script setup lang="ts">
-import { Heart, Home, MapPin, Menu } from 'lucide-vue-next'
+import { Compass, Home, LayoutGrid, Menu } from 'lucide-vue-next'
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 
 const route = useRoute()
 
-// 與桌面版對齊：找補習班 | 地區情報 | 收藏 | 更多
-// 手機 4 格有限，文章專區收進「更多」頁
 const tabs = computed(() => [
-  { names: ['home', 'school-detail'], label: '找補習班', icon: Home, to: '/' },
-  { names: ['district-stats'], label: '地區情報', icon: MapPin, to: '/district-stats' },
-  { names: ['favorites'], label: '收藏', icon: Heart, to: '/favorites' },
-  { names: ['more', 'contact', 'privacy', 'terms', 'guide', 'about', 'review-policy', 'ai-pick'], label: '更多', icon: Menu, to: '/more' },
+  { names: ['dashboard'], label: '導覽', icon: LayoutGrid, to: '/' },
+  { names: ['home', 'school-detail'], label: '找班', icon: Home, to: '/find' },
+  { names: ['district-stats'], label: '情報', icon: Compass, to: '/district-stats' },
+  { names: ['favorites', 'more', 'contact', 'privacy', 'terms', 'guide', 'guide-article', 'about', 'review-policy', 'ai-pick'], label: '更多', icon: Menu, to: '/more' },
 ])
 
 function isActive(names: string[]) {

@@ -28,7 +28,7 @@ const faqs = [
   },
   {
     q: '資料更新頻率為何？',
-    a: '補習班基本資料每月與教育部開放資料同步一次；稽查紀錄則依主管機關公告盡快更新。本平台非主管機關，內容以各機關最新公告為準。',
+    a: '補習班基本資料原則上每月與教育部等開放資料同步；稽查紀錄依主管機關公告陸續更新。本平台非主管機關，內容以各機關最新公告為準。',
   },
   {
     q: '補習班業者可以回應評價嗎？',
@@ -81,7 +81,7 @@ function toggleFaq(i: number) {
               <p class="text-xs font-medium text-gray-500">資料回報</p>
               <p class="mt-1 text-sm font-semibold text-gray-900">補習班資料有誤？</p>
               <p class="mt-1 text-sm leading-relaxed text-gray-500">
-                若發現資料不正確，歡迎來信告知，我們會盡快核實更新。
+                若發現資料不正確，歡迎來信告知；我們會於合理範圍內核實。公開資料仍以主管機關公告為準。
               </p>
               <a
                 :href="mailto('資料回報')"

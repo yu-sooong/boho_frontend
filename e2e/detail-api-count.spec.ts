@@ -34,14 +34,6 @@ test.describe('詳情頁 API 次數', () => {
   test('進詳情／返回再進，印出呼叫次數', async ({ page }) => {
     const api = trackApis(page)
 
-    await page.addInitScript(() => {
-      try {
-        localStorage.setItem('buyu:homeTourDone', '1')
-      } catch {
-        /* ignore */
-      }
-    })
-
     // 先載首頁（暖列表 cache）
     await page.goto('/', { waitUntil: 'domcontentloaded' })
     await page.waitForResponse(

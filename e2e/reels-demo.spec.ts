@@ -2,12 +2,11 @@
  * 補亦樂乎 Reels／Threads 素材 — UI 錄影（約 45–50 秒）
  *
  * ── 分鏡腳本（旁白可後製）────────────────────────────────────────
- *  0–3s    Loading → 歡迎導覽「報名前，先查清楚」
- *  3–14s   導覽放慢（搜尋／篩選／地圖／列表各停約 2 秒）
- * 14–20s   搜尋「美語」
- * 20–27s   篩選「西屯區」→ 套用
- * 27–35s   切地圖 → 預覽立案狀態
- * 35–42s   詳情：立案徽章 → 收藏
+ *  0–4s    Loading → 找班列表
+ *  4–12s   搜尋「美語」
+ * 12–22s   篩選「西屯區」→ 套用
+ * 22–32s   切地圖 → 預覽立案狀態
+ * 32–42s   詳情：立案徽章 → 收藏
  * 42–48s   滾到家長評價、停留
  *
  * 產出 raw：test-results/reels/（再經 npm run reels:compose 套 3D 手機外框）
@@ -18,6 +17,7 @@ import path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { DEMO_SCHOOL_ID } from './fixtures/reelsMock'
 import { installReelsMocks } from './helpers/reelsMocks'
+import { seedCityOnboarding } from './helpers/seedCity'
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 const OUT_DIR = path.join(__dirname, '../test-results/reels')
@@ -41,28 +41,11 @@ async function sleep(ms: number) {
 }
 
 async function waitForHomeReady(page: Page) {
+  await seedCityOnboarding(page)
+  await page.goto('/find')
   await page.waitForFunction(() => !!window.__e2eHome, null, { timeout: 20_000 })
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 12_000 }).catch(() => {})
-}
-
-async function clickTourNext(page: Page) {
-  const next = page.locator('.driver-popover-next-btn')
-  await next.waitFor({ state: 'visible', timeout: 8_000 })
-  await next.click()
-}
-
-/** 導覽每步停留，讓觀眾看清楚 */
-async function runSlowTour(page: Page) {
-  await page.locator('.driver-popover').waitFor({ state: 'visible', timeout: 15_000 })
-  await sleep(2200) // 歡迎
-
-  for (let i = 0; i < 4; i++) {
-    await clickTourNext(page)
-    await sleep(2100)
-  }
-  await clickTourNext(page) // 開始探索
-  await page.locator('.driver-popover').waitFor({ state: 'hidden', timeout: 5_000 }).catch(() => {})
-  await sleep(600)
+  await sleep(2200)
 }
 
 test('補亦樂乎核心互動 demo', async ({ page }, testInfo) => {
@@ -71,7 +54,6 @@ test('補亦樂乎核心互動 demo', async ({ page }, testInfo) => {
 
   await page.addInitScript(() => {
     try {
-      localStorage.removeItem('buyu:homeTourDone')
       localStorage.removeItem('buyu:favorites')
     } catch {
       // ignore
@@ -79,13 +61,9 @@ test('補亦樂乎核心互動 demo', async ({ page }, testInfo) => {
   })
 
   const t0 = Date.now()
-  await page.goto('/')
   await waitForHomeReady(page)
 
-  // 1) 導覽
-  await runSlowTour(page)
-
-  // 2) 搜尋
+  // 1) 搜尋
   const search = page.getByRole('searchbox', { name: '搜尋補習班名稱或地址' }).first()
   await search.click()
   await sleep(300)
@@ -97,16 +75,16 @@ test('補亦樂乎核心互動 demo', async ({ page }, testInfo) => {
   )
   await sleep(1800)
 
-  // 3) 篩選行政區
+  // 2) 篩選行政區
   await page.getByRole('button', { name: '篩選' }).first().click()
   await page.getByRole('heading', { name: /篩選條件/ }).waitFor({ state: 'visible' })
   await sleep(700)
   await page.getByRole('button', { name: '西屯區', exact: true }).click()
   await sleep(900)
-  await page.getByRole('button', { name: '套用篩選' }).click()
+  await page.getByRole('button', { name: /套用/ }).click()
   await sleep(1400)
 
-  // 4) 地圖 + 預覽
+  // 3) 地圖 + 預覽
   await page.getByRole('button', { name: '地圖' }).click()
   await page.waitForFunction(
     () => window.__e2eHome?.getState().mapReady === true,
@@ -122,24 +100,22 @@ test('補亦樂乎核心互動 demo', async ({ page }, testInfo) => {
   await page.evaluate((id) => window.__e2eHome!.openPreview(id), schoolId)
   await sleep(2400)
 
-  // 5) 詳情：立案 → 收藏
-  await page.getByRole('button', { name: /查看完整資訊/ }).click()
-  await page.waitForURL(new RegExp(`/schools/${schoolId}`), { timeout: 10_000 })
-  await page.locator('h1').first().waitFor({ state: 'visible', timeout: 10_000 })
-  await sleep(2200)
-
-  await page.getByRole('button', { name: '加入收藏' }).click()
-  await sleep(1200)
-
-  // 6) 評價
-  await page.getByRole('heading', { name: '家長評價' }).scrollIntoViewIfNeeded()
-  await sleep(2800)
-
-  // 再輕微上滾一點，讓評價卡片完整入鏡
-  await page.mouse.wheel(0, 120)
+  // 4) 詳情
+  await page.goto(`/schools/${schoolId}`)
+  await page.locator('h1').first().waitFor({ state: 'visible', timeout: 15_000 })
   await sleep(1600)
+
+  const fav = page.getByRole('button', { name: /收藏|加入收藏|取消收藏/ }).first()
+  if (await fav.isVisible().catch(() => false)) {
+    await fav.click()
+    await sleep(900)
+  }
+
+  await page.getByText(/評價|家長/).first().scrollIntoViewIfNeeded().catch(() => {})
+  await sleep(2200)
 
   const elapsed = Date.now() - t0
   if (elapsed < TARGET_MS) await sleep(TARGET_MS - elapsed)
-  console.log(`[reels:record] 片長約 ${((Date.now() - t0) / 1000).toFixed(1)}s → ${OUT_DIR}`)
+
+  testInfo.annotations.push({ type: 'reels-out', description: OUT_DIR })
 })

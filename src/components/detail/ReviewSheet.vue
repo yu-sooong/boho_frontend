@@ -4,35 +4,40 @@ import Tag from '@/components/common/Tag.vue'
 import ReviewGuidelines from '@/components/detail/ReviewGuidelines.vue'
 import { useReviews } from '@/composables/useReviews'
 import {
+  REVIEW_CONTENT_MAX,
   REVIEW_FEATURE_OPTIONS,
   REVIEW_IDENTITIES,
-  REVIEW_PERIODS,
   REVIEW_POLICY,
   type ReviewIdentity,
-  type ReviewPeriod,
 } from '@/data/reviewConstants'
 import type { School } from '@/types'
 import { ChevronDown, ChevronUp, Info, X } from 'lucide-vue-next'
 import { computed, ref } from 'vue'
 
-const props = defineProps<{
-  school: School
-}>()
+const props = withDefaults(
+  defineProps<{
+    school: School
+    /** 從詳情頁點星進入時預填 */
+    initialRating?: number
+  }>(),
+  { initialRating: 0 },
+)
 
 const emit = defineEmits<{ close: []; submitted: [] }>()
 
 const { submitReview } = useReviews(() => props.school.id)
 
-const rating = ref(0)
+const rating = ref(props.initialRating > 0 ? props.initialRating : 0)
 const content = ref('')
 const identity = ref<ReviewIdentity | ''>('')
-const period = ref<ReviewPeriod | ''>('')
 const selectedFeatures = ref<string[]>([])
 const showGuidelines = ref(false)
 const errorMsg = ref('')
 const isSubmitting = ref(false)
 
-const contentLen = computed(() => content.value.trim().length)
+const contentLen = computed(() => content.value.length)
+const contentTrimLen = computed(() => content.value.trim().length)
+const overMax = computed(() => contentLen.value > REVIEW_CONTENT_MAX)
 
 function toggleFeature(feature: string) {
   if (selectedFeatures.value.includes(feature)) {
@@ -44,9 +49,9 @@ function toggleFeature(feature: string) {
 
 function validate(): string | null {
   if (!identity.value) return '請選擇您的身份'
-  if (!period.value) return '請選擇就讀／接觸時期'
   if (rating.value < 1) return '請點選星等評分'
-  if (contentLen.value < 15) return `經驗內容請至少 15 字（目前 ${contentLen.value} 字）`
+  if (contentTrimLen.value < 1) return '請寫下你的經驗'
+  if (overMax.value) return `內容請勿超過 ${REVIEW_CONTENT_MAX} 字`
   if (!props.school.id) return '補習班資料異常，請重新整理後再試'
   return null
 }
@@ -58,14 +63,13 @@ async function submit() {
     errorMsg.value = validationError
     return
   }
-  if (!identity.value || !period.value) return
+  if (!identity.value) return
 
   isSubmitting.value = true
   try {
     await submitReview({
       schoolId: props.school.id,
       identity: identity.value,
-      period: period.value,
       rating: Math.round(Number(rating.value)),
       content: content.value,
       tags: selectedFeatures.value,
@@ -116,20 +120,6 @@ async function submit() {
           </div>
         </div>
 
-        <div>
-          <p class="mb-2 text-sm font-medium text-gray-800">就讀／接觸時期</p>
-          <div class="flex flex-wrap gap-2">
-            <button
-              v-for="opt in REVIEW_PERIODS"
-              :key="opt.value"
-              type="button"
-              @click="period = opt.value"
-            >
-              <Tag :active="period === opt.value" size="md">{{ opt.label }}</Tag>
-            </button>
-          </div>
-        </div>
-
         <div class="rounded-md bg-amber-50/80 px-3 py-4">
           <p class="mb-3 text-center text-sm font-semibold text-gray-800">整體評分</p>
           <div class="flex justify-center">
@@ -164,14 +154,15 @@ async function submit() {
           <textarea
             v-model="content"
             rows="4"
-            placeholder="分享您的親身經驗，例如老師怎麼帶班、連絡是否順暢、教材與環境……（至少 15 字）"
+            :maxlength="REVIEW_CONTENT_MAX"
+            placeholder="分享你的親身經驗，例如老師怎麼帶班、連絡是否順暢、教材與環境……"
             class="w-full resize-none rounded-md border border-gray-200 p-3 text-sm text-gray-700 placeholder:text-gray-500 focus:border-primary-600 focus:outline-none"
           />
           <p
             class="mt-1 text-right text-xs"
-            :class="contentLen > 0 && contentLen < 15 ? 'text-amber-700' : 'text-gray-500'"
+            :class="overMax ? 'text-amber-700' : 'text-gray-500'"
           >
-            {{ contentLen }}／至少 15 字
+            {{ contentLen }}／{{ REVIEW_CONTENT_MAX }}
           </p>
         </div>
 

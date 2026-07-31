@@ -21,7 +21,7 @@ const open = ref(false)
       <span class="flex items-center gap-2 text-amber-700">
         <ShieldAlert :size="18" class="shrink-0" />
         <span class="text-sm font-medium">
-          近 {{ years ?? 3 }} 年 {{ props.penalties.length }} 筆稽查紀錄
+          近 {{ years ?? 3 }} 年 {{ props.penalties.length }} 筆公開稽查紀錄
         </span>
       </span>
       <ChevronDown

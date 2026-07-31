@@ -3,8 +3,10 @@ import { computed, ref, watch } from 'vue'
 import { ApiError } from '@/api/client'
 import { getAllSchools, getSchoolDetail } from '@/api/schools'
 import type { ApiSchoolDetail, ApiSchoolListItem } from '@/api/types'
+import { getMockSchools, isMockSchoolId } from '@/data/mockSchools'
 import type { PenaltyRecord, School } from '@/types'
 import { isMongoObjectId } from '@/utils/objectId'
+import { useCityStore } from '@/stores/cityStore'
 
 // ── 常數 ──────────────────────────────────────────────────────────────────────
 
@@ -109,8 +111,12 @@ function detailToSchool(s: ApiSchoolDetail): School {
 // ── Store ──────────────────────────────────────────────────────────────────────
 
 export const useSchoolStore = defineStore('school', () => {
+  const cityStore = useCityStore()
+
   // ── 全量資料（一次 API 載入，前端篩選/排序）─────────────────────────────────
   const allSchools = ref<School[]>([])
+  /** 依縣市快取 API 結果，切換縣市時免重抓（對南美延遲特別重要） */
+  const cityListCache = ref<Partial<Record<string, School[]>>>({})
   const isLoadingAll = ref(false)
   const loadError = ref<string | null>(null)
 
@@ -146,33 +152,68 @@ export const useSchoolStore = defineStore('school', () => {
 
   // ── Computed：篩選 ────────────────────────────────────────────────────────────
 
-  /** 依 keyword / district / category 即時篩選（前端，無 API round-trip） */
-  const filteredSchools = computed<School[]>(() => {
-    let result = allSchools.value
-    const kw = keyword.value.trim().toLowerCase()
+  /** 關鍵字至少幾個字才生效（與 UI 提示一致） */
+  const KEYWORD_MIN_LEN = 2
 
-    if (kw.length >= 2) {
+  function applySchoolFilters(
+    source: School[],
+    opts: {
+      keyword: string
+      districts: string[]
+      categories: string[]
+      onlyHasPenalty: boolean
+    },
+  ): School[] {
+    let result = source
+    const kw = opts.keyword.trim().toLowerCase()
+
+    if (kw.length >= KEYWORD_MIN_LEN) {
       result = result.filter(
         (s) =>
           s.name.toLowerCase().includes(kw) ||
           s.address.toLowerCase().includes(kw),
       )
     }
-    if (selectedDistricts.value.length > 0) {
-      const set = new Set(selectedDistricts.value)
+    if (opts.districts.length > 0) {
+      const set = new Set(opts.districts)
       result = result.filter((s) => set.has(s.district ?? ''))
     }
-    if (selectedCategories.value.length > 0) {
-      const set = new Set(selectedCategories.value)
+    if (opts.categories.length > 0) {
+      const set = new Set(opts.categories)
       result = result.filter((s) => s.categoryTags.some((c) => set.has(c)))
     }
-    if (onlyHasPenalty.value) {
+    if (opts.onlyHasPenalty) {
       result = result.filter(
         (s) => (s.penaltyCount ?? 0) > 0 || s.penalties.length > 0,
       )
     }
     return result
-  })
+  }
+
+  /** 依 keyword / district / category 即時篩選（前端，無 API round-trip） */
+  const filteredSchools = computed<School[]>(() =>
+    applySchoolFilters(allSchools.value, {
+      keyword: keyword.value,
+      districts: selectedDistricts.value,
+      categories: selectedCategories.value,
+      onlyHasPenalty: onlyHasPenalty.value,
+    }),
+  )
+
+  /** 篩選面板草稿預覽用 */
+  function countMatching(opts: {
+    districts: string[]
+    categories: string[]
+    onlyHasPenalty: boolean
+    keyword?: string
+  }): number {
+    return applySchoolFilters(allSchools.value, {
+      keyword: opts.keyword ?? keyword.value,
+      districts: opts.districts,
+      categories: opts.categories,
+      onlyHasPenalty: opts.onlyHasPenalty,
+    }).length
+  }
 
   /** 依距離排序並動態算出 distanceKm（有使用者座標時生效） */
   const sortedSchools = computed<School[]>(() => {
@@ -227,10 +268,19 @@ export const useSchoolStore = defineStore('school', () => {
   const hasMore = computed(() => displayLimit.value < sortedSchools.value.length)
   const totalFiltered = computed(() => sortedSchools.value.length)
 
-  // 篩選條件變動時重置分頁
-  watch(filteredSchools, () => {
-    displayLimit.value = DISPLAY_STEP
-  })
+  // 僅篩選條件／縣市變動時重置分頁（勿因詳情 putCache 改 allSchools 而打回第一頁）
+  watch(
+    () => [
+      cityStore.city,
+      keyword.value,
+      selectedDistricts.value.join('\0'),
+      selectedCategories.value.join('\0'),
+      onlyHasPenalty.value,
+    ],
+    () => {
+      displayLimit.value = DISPLAY_STEP
+    },
+  )
 
   // ── Actions ───────────────────────────────────────────────────────────────────
 
@@ -247,22 +297,64 @@ export const useSchoolStore = defineStore('school', () => {
     }
   }
 
-  /** 一次載入所有學校（帶 Redis 72h cache，通常只打一次 API） */
-  async function loadAll() {
-    if (allSchools.value.length > 0) return   // 已載入，直接略過
+  /** 一次載入當前縣市學校（同一支 /schools/all，以 city 區分） */
+  async function loadAll(force = false) {
+    const city = cityStore.city
+    if (!city) {
+      allSchools.value = []
+      return
+    }
+
+    if (city.dataSource === 'mock') {
+      isLoadingAll.value = true
+      loadError.value = null
+      try {
+        allSchools.value = getMockSchools(city.id) ?? []
+        allSchools.value.forEach((s) => schoolCache.value.set(s.id, s))
+      } finally {
+        isLoadingAll.value = false
+      }
+      return
+    }
+
+    const cacheKey = city.name
+    if (!force && cityListCache.value[cacheKey]?.length) {
+      allSchools.value = cityListCache.value[cacheKey]!
+      return
+    }
+
     isLoadingAll.value = true
     loadError.value = null
     try {
-      const result = await getAllSchools()
-      allSchools.value = result.data.map(listItemToSchool)
-      // 僅作列表／地圖快取；不可當作 detailLoaded
-      allSchools.value.forEach((s) => schoolCache.value.set(s.id, s))
+      const result = await getAllSchools(city.name)
+      const mapped = result.data.map(listItemToSchool)
+      cityListCache.value = { ...cityListCache.value, [cacheKey]: mapped }
+      allSchools.value = mapped
+      mapped.forEach((s) => schoolCache.value.set(s.id, s))
     } catch (e) {
       loadError.value = e instanceof Error ? e.message : '載入失敗，請稍後再試'
     } finally {
       isLoadingAll.value = false
     }
   }
+
+  function resetFiltersForCityChange() {
+    keyword.value = ''
+    selectedDistricts.value = []
+    selectedCategories.value = []
+    onlyHasPenalty.value = false
+    displayLimit.value = DISPLAY_STEP
+    selectedSchoolId.value = null
+  }
+
+  watch(
+    () => cityStore.cityId,
+    async (id, prev) => {
+      if (!id || id === prev) return
+      resetFiltersForCityChange()
+      await loadAll(true)
+    },
+  )
 
   function showMore() {
     displayLimit.value = Math.min(
@@ -278,6 +370,15 @@ export const useSchoolStore = defineStore('school', () => {
     if (cached?.detailLoaded) return cached
     const detail = await getSchoolDetail(id)
     const school = detailToSchool(detail)
+    // 詳情偶發缺座標時，沿用列表／快取裡已有的 lat/lng（前端算距離用）
+    if (!school.lat || !school.lng) {
+      const fromList =
+        allSchools.value.find((s) => s.id === id) ?? schoolCache.value.get(id)
+      if (fromList?.lat && fromList?.lng) {
+        school.lat = fromList.lat
+        school.lng = fromList.lng
+      }
+    }
     putCache(school)
     return school
   }
@@ -293,6 +394,20 @@ export const useSchoolStore = defineStore('school', () => {
     isLoadingDetail.value = true
     detailError.value = null
     detailNotFound.value = false
+
+    // 假資料：已含詳情
+    if (isMockSchoolId(id)) {
+      const mock = schoolCache.value.get(id) ?? allSchools.value.find((s) => s.id === id)
+      if (mock) {
+        currentDetail.value = { ...mock, detailLoaded: true }
+        schoolCache.value.set(id, currentDetail.value)
+      } else {
+        detailNotFound.value = true
+        currentDetail.value = null
+      }
+      isLoadingDetail.value = false
+      return
+    }
 
     // 先顯示列表摘要（若有），避免空白閃爍；仍會打 detail API
     const preview = schoolCache.value.get(id)
@@ -320,6 +435,9 @@ export const useSchoolStore = defineStore('school', () => {
 
   /** 載入並快取詳情，不碰 currentDetail（可供收藏頁並行請求；失敗回 null） */
   async function ensureCached(id: string): Promise<School | null> {
+    if (isMockSchoolId(id)) {
+      return schoolCache.value.get(id) ?? allSchools.value.find((s) => s.id === id) ?? null
+    }
     if (!isMongoObjectId(id)) return null
     try {
       return await fetchDetail(id)
@@ -407,6 +525,7 @@ export const useSchoolStore = defineStore('school', () => {
     categories,
     hasMore,
     totalFiltered,
+    KEYWORD_MIN_LEN,
     // actions
     loadAll,
     showMore,
@@ -417,6 +536,7 @@ export const useSchoolStore = defineStore('school', () => {
     setCategories, toggleCategory, removeCategory,
     setOnlyHasPenalty,
     clearFilters,
+    countMatching,
     setSelectedSchool,
     setMobileMode,
     setUserCoords,

@@ -1,0 +1,383 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=1080" />
+  <title>補亦樂乎 · 兩班對照更版</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #475569;
+      --teal: #0f766e;
+      --emerald: #10b981;
+      --bg0: #ecfdf5;
+      --bg1: #f0fdfa;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px;
+      height: 1080px;
+      overflow: hidden;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 55% 45% at 18% 22%, rgba(16, 185, 129, 0.18), transparent 60%),
+        radial-gradient(ellipse 50% 40% at 88% 78%, rgba(15, 118, 110, 0.14), transparent 55%),
+        linear-gradient(160deg, var(--bg1) 0%, #f8fafc 42%, var(--bg0) 100%);
+      position: relative;
+    }
+
+    .orb {
+      position: absolute;
+      width: 520px;
+      height: 520px;
+      border-radius: 50%;
+      background: radial-gradient(circle, rgba(16, 185, 129, 0.2), transparent 68%);
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      animation: orbPulse 4s ease-in-out infinite;
+      pointer-events: none;
+    }
+    @keyframes orbPulse {
+      0%, 100% { transform: translate(-50%, -50%) scale(0.92); opacity: 0.65; }
+      50% { transform: translate(-50%, -50%) scale(1.08); opacity: 1; }
+    }
+
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 64px 72px;
+      text-align: center;
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    /* 總長 9s */
+    .s1 { animation: scene1 9s ease-in-out infinite; }
+    .s2 { animation: scene2 9s ease-in-out infinite; }
+    .s3 { animation: scene3 9s ease-in-out infinite; }
+    .s4 { animation: scene4 9s ease-in-out infinite; }
+
+    @keyframes scene1 {
+      0%, 2% { opacity: 0; transform: translateY(12px); }
+      6%, 20% { opacity: 1; transform: translateY(0); }
+      26%, 100% { opacity: 0; transform: translateY(-10px); }
+    }
+    @keyframes scene2 {
+      0%, 22% { opacity: 0; transform: translateY(16px); }
+      28%, 48% { opacity: 1; transform: translateY(0); }
+      54%, 100% { opacity: 0; transform: translateY(-10px); }
+    }
+    @keyframes scene3 {
+      0%, 50% { opacity: 0; transform: translateY(16px); }
+      56%, 74% { opacity: 1; transform: translateY(0); }
+      80%, 100% { opacity: 0; transform: translateY(-10px); }
+    }
+    @keyframes scene4 {
+      0%, 76% { opacity: 0; transform: translateY(16px); }
+      82%, 96% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+
+    .logo {
+      width: 112px;
+      height: 112px;
+      margin-bottom: 18px;
+      filter: drop-shadow(0 12px 28px rgba(15, 23, 42, 0.1));
+    }
+    .brand {
+      font-size: 54px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.05;
+    }
+    .eyebrow {
+      margin-top: 14px;
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.04em;
+    }
+    .headline {
+      font-size: 52px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      text-wrap: balance;
+      max-width: 900px;
+    }
+    .sub {
+      margin-top: 18px;
+      font-size: 26px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 780px;
+      text-wrap: pretty;
+    }
+
+    .city-row {
+      display: flex;
+      gap: 18px;
+      margin-top: 40px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .city-pill {
+      min-width: 200px;
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 22px;
+      padding: 22px 26px;
+      box-shadow: 0 14px 36px rgba(15, 118, 110, 0.1);
+      text-align: left;
+    }
+    .city-pill .name {
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .city-pill .live {
+      margin-top: 10px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 18px;
+      font-weight: 800;
+      color: #047857;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      padding: 6px 14px;
+    }
+    .city-pill .live::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+
+    /* 對照卡 */
+    .compare {
+      margin-top: 28px;
+      width: 920px;
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 24px;
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(15, 118, 110, 0.12);
+      text-align: left;
+    }
+    .compare-head {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      gap: 0;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 18px 22px;
+    }
+    .compare-head .label {
+      font-size: 18px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .compare-head .school {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: -0.02em;
+    }
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      padding: 16px 22px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 22px;
+      font-weight: 700;
+      align-items: center;
+    }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-row .k { color: #64748b; font-weight: 700; font-size: 20px; }
+    .ok {
+      color: #047857;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .ok::before {
+      content: "✓";
+      font-weight: 900;
+    }
+    .muted-cell { color: #334155; }
+
+    .steps {
+      display: flex;
+      gap: 14px;
+      margin-top: 28px;
+      flex-wrap: wrap;
+      justify-content: center;
+    }
+    .step {
+      font-size: 22px;
+      font-weight: 800;
+      color: var(--teal);
+      background: #fff;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      border-radius: 999px;
+      padding: 12px 20px;
+      box-shadow: 0 8px 24px rgba(15, 118, 110, 0.08);
+    }
+
+    .cta {
+      margin-top: 34px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 72px;
+      padding: 0 40px;
+      border-radius: 18px;
+      background: var(--teal);
+      color: #fff;
+      font-size: 30px;
+      font-weight: 900;
+      letter-spacing: 0.01em;
+      box-shadow: 0 16px 40px rgba(15, 118, 110, 0.28);
+    }
+    .url {
+      margin-top: 18px;
+      font-size: 26px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .note {
+      margin-top: 14px;
+      font-size: 20px;
+      font-weight: 600;
+      color: #64748b;
+    }
+
+    .footer-brand {
+      position: absolute;
+      bottom: 48px;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 12px;
+      opacity: 0.9;
+      z-index: 2;
+    }
+    .footer-brand svg { width: 36px; height: 36px; }
+    .footer-brand span {
+      font-size: 22px;
+      font-weight: 800;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <div class="orb" aria-hidden="true"></div>
+
+  <!-- Scene 1：品牌 -->
+  <section class="scene s1">
+    <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    <h1 class="brand">補亦樂乎</h1>
+    <p class="eyebrow">補習班情報地圖</p>
+    <p class="sub" style="margin-top:28px">不評分、不排名，把公開資料攤開給你看</p>
+  </section>
+
+  <!-- Scene 2：三縣市 -->
+  <section class="scene s2">
+    <p class="eyebrow" style="margin-bottom:12px">更新上線</p>
+    <h2 class="headline">台中・新北・高雄<br>都能查了</h2>
+    <div class="city-row">
+      <div class="city-pill">
+        <div class="name">台中市</div>
+        <span class="live">開放查詢</span>
+      </div>
+      <div class="city-pill">
+        <div class="name">新北市</div>
+        <span class="live">開放查詢</span>
+      </div>
+      <div class="city-pill">
+        <div class="name">高雄市</div>
+        <span class="live">開放查詢</span>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 3：兩班對照 -->
+  <section class="scene s3">
+    <h2 class="headline">收藏兩間，並排對照</h2>
+    <p class="sub">立案、地區、電話、公開稽查一次看清楚</p>
+    <div class="compare" aria-hidden="true">
+      <div class="compare-head">
+        <div class="label">對照項目</div>
+        <div class="school">甲美語</div>
+        <div class="school">乙文理</div>
+      </div>
+      <div class="compare-row">
+        <div class="k">立案狀態</div>
+        <div class="ok">在業</div>
+        <div class="ok">在業</div>
+      </div>
+      <div class="compare-row">
+        <div class="k">行政區</div>
+        <div class="muted-cell">西屯區</div>
+        <div class="muted-cell">南屯區</div>
+      </div>
+      <div class="compare-row">
+        <div class="k">公開稽查</div>
+        <div class="muted-cell">無紀錄</div>
+        <div class="muted-cell">有 1 筆</div>
+      </div>
+    </div>
+  </section>
+
+  <!-- Scene 4：分享 CTA -->
+  <section class="scene s4">
+    <h2 class="headline">再分享給家人一起看</h2>
+    <p class="sub">對照連結可直接傳，對方也能收藏比對</p>
+    <div class="steps">
+      <span class="step">收藏</span>
+      <span class="step">對照</span>
+      <span class="step">分享</span>
+    </div>
+    <div class="cta">打開補亦樂乎</div>
+    <div class="url">boho.yujii.app</div>
+    <p class="note">不業配・不賣置頂・公開資料優先</p>
+  </section>
+
+  <div class="footer-brand" aria-hidden="true">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    <span>補亦樂乎</span>
+  </div>
+</body>
+</html>

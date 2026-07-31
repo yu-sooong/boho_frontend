@@ -1,0 +1,306 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>補亦樂乎 · 地區教育情報（直式）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #475569;
+      --teal: #0f766e;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 70% 40% at 50% 18%, rgba(16, 185, 129, 0.2), transparent 60%),
+        radial-gradient(ellipse 60% 35% at 80% 80%, rgba(15, 118, 110, 0.12), transparent 55%),
+        linear-gradient(180deg, #f0fdfa 0%, #f8fafc 45%, #ecfdf5 100%);
+      position: relative;
+    }
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 64px;
+      text-align: center;
+      opacity: 0;
+    }
+    .s1 { animation: scene1 9s ease-in-out infinite; }
+    .s2 { animation: scene2 9s ease-in-out infinite; }
+    .s3 { animation: scene3 9s ease-in-out infinite; }
+    .s4 { animation: scene4 9s ease-in-out infinite; }
+    @keyframes scene1 {
+      0%, 2% { opacity: 0; transform: translateY(16px); }
+      6%, 20% { opacity: 1; transform: translateY(0); }
+      26%, 100% { opacity: 0; transform: translateY(-12px); }
+    }
+    @keyframes scene2 {
+      0%, 22% { opacity: 0; transform: translateY(16px); }
+      28%, 48% { opacity: 1; transform: translateY(0); }
+      54%, 100% { opacity: 0; transform: translateY(-12px); }
+    }
+    @keyframes scene3 {
+      0%, 50% { opacity: 0; transform: translateY(16px); }
+      56%, 74% { opacity: 1; transform: translateY(0); }
+      80%, 100% { opacity: 0; transform: translateY(-12px); }
+    }
+    @keyframes scene4 {
+      0%, 76% { opacity: 0; transform: translateY(16px); }
+      82%, 96% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+    .logo { width: 140px; height: 140px; margin-bottom: 28px; }
+    .brand { font-size: 64px; font-weight: 900; letter-spacing: -0.03em; }
+    .eyebrow {
+      margin-top: 16px;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.04em;
+    }
+    .headline {
+      font-size: 56px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      text-wrap: balance;
+    }
+    .sub {
+      margin-top: 22px;
+      font-size: 30px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 860px;
+    }
+    .map-card {
+      margin-top: 36px;
+      width: 100%;
+      max-width: 920px;
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 28px;
+      padding: 32px;
+      box-shadow: 0 18px 48px rgba(15, 118, 110, 0.12);
+      text-align: left;
+    }
+    .map-card .title {
+      font-size: 30px;
+      font-weight: 900;
+      margin-bottom: 20px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 14px;
+    }
+    .cell {
+      height: 110px;
+      border-radius: 18px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      font-weight: 800;
+      border: 3px solid transparent;
+    }
+    .c1 { background: #ecfdf5; }
+    .c2 { background: #d1fae5; }
+    .c3 { background: #a7f3d0; }
+    .c5 { background: #34d399; color: #064e3b; }
+    .cell.pick {
+      border-color: var(--teal);
+      box-shadow: 0 0 0 4px rgba(15, 118, 110, 0.18);
+    }
+    .cell .n { font-size: 28px; font-weight: 900; margin-top: 4px; }
+    .metrics {
+      margin-top: 36px;
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      width: 100%;
+      max-width: 860px;
+    }
+    .metric {
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 24px;
+      padding: 28px 32px;
+      box-shadow: 0 14px 36px rgba(15, 118, 110, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+    }
+    .metric .label {
+      font-size: 28px;
+      font-weight: 800;
+      color: #64748b;
+    }
+    .metric .value {
+      font-size: 48px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+    }
+    .metric .note {
+      font-size: 22px;
+      font-weight: 700;
+      color: var(--teal);
+      margin-top: 4px;
+    }
+    .chips {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 36px;
+      width: 100%;
+      max-width: 560px;
+    }
+    .chip {
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--teal);
+      background: #fff;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      border-radius: 999px;
+      padding: 18px 28px;
+      box-shadow: 0 8px 24px rgba(15, 118, 110, 0.08);
+    }
+    .cta {
+      margin-top: 36px;
+      display: inline-flex;
+      min-height: 84px;
+      padding: 0 48px;
+      border-radius: 22px;
+      background: var(--teal);
+      color: #fff;
+      font-size: 34px;
+      font-weight: 900;
+      align-items: center;
+      box-shadow: 0 16px 40px rgba(15, 118, 110, 0.28);
+    }
+    .url {
+      margin-top: 22px;
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .footer-brand {
+      position: absolute;
+      bottom: 72px;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 2;
+    }
+    .footer-brand svg { width: 44px; height: 44px; }
+    .footer-brand span {
+      font-size: 26px;
+      font-weight: 800;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <section class="scene s1">
+    <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    <h1 class="brand">補亦樂乎</h1>
+    <p class="eyebrow">地區教育情報</p>
+    <p class="sub">地圖找班之外，也能先看各行政區全貌</p>
+  </section>
+
+  <section class="scene s2">
+    <h2 class="headline">先選縣市<br>再點行政區</h2>
+    <p class="sub">密度圖一眼看出哪區班數較多</p>
+    <div class="map-card" aria-hidden="true">
+      <div class="title">台中市 · 行政區密度</div>
+      <div class="grid">
+        <div class="cell c2"><span>北屯</span><span class="n">312</span></div>
+        <div class="cell c5 pick"><span>西屯</span><span class="n">418</span></div>
+        <div class="cell c3"><span>南屯</span><span class="n">256</span></div>
+        <div class="cell c1"><span>東區</span><span class="n">92</span></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene s3">
+    <p class="eyebrow" style="margin-bottom:12px">西屯區重點</p>
+    <h2 class="headline">立案、密度<br>公開稽查</h2>
+    <div class="metrics" aria-hidden="true">
+      <div class="metric">
+        <div>
+          <div class="label">立案</div>
+          <div class="note">占全市約 15%</div>
+        </div>
+        <div class="value">418</div>
+      </div>
+      <div class="metric">
+        <div>
+          <div class="label">資源充沛</div>
+          <div class="note">相對全市較高</div>
+        </div>
+        <div class="value" style="font-size:40px">較高</div>
+      </div>
+      <div class="metric">
+        <div>
+          <div class="label">有稽查</div>
+          <div class="note">公開紀錄占比</div>
+        </div>
+        <div class="value">12%</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene s4">
+    <h2 class="headline">三縣市<br>都能看情報</h2>
+    <p class="sub">不排行、不聳動</p>
+    <div class="chips">
+      <span class="chip">台中市</span>
+      <span class="chip">新北市</span>
+      <span class="chip">高雄市</span>
+    </div>
+    <div class="cta">打開地區情報</div>
+    <div class="url">boho.yujii.app</div>
+    <p class="note">底欄「情報」· 公開資料優先</p>
+  </section>
+
+  <div class="footer-brand" aria-hidden="true">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    <span>補亦樂乎</span>
+  </div>
+</body>
+</html>

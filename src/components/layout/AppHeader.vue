@@ -5,10 +5,11 @@ import { useRoute } from 'vue-router'
 const route = useRoute()
 
 const navItems = [
-  { label: '找補習班', to: '/', names: ['home', 'school-detail'] },
+  { label: '導覽', to: '/', names: ['dashboard'] },
+  { label: '找班', to: '/find', names: ['home', 'school-detail'] },
   { label: '地區情報', to: '/district-stats', names: ['district-stats'] },
   { label: '收藏', to: '/favorites', names: ['favorites'] },
-  { label: '文章專區', to: '/guide', names: ['guide'] },
+  { label: '文章專區', to: '/guide', names: ['guide', 'guide-article'] },
   { label: 'AI 選班', to: '/ai-pick', names: ['ai-pick'] },
   { label: '更多', to: '/more', names: ['more', 'contact', 'privacy', 'terms', 'about', 'review-policy'] },
 ]

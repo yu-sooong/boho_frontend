@@ -84,6 +84,8 @@ export interface ApiMapResult {
 export interface ApiDistrictStat {
   district: string
   count: number
+  /** 該區有稽查紀錄的立案班數（舊快取可能缺省） */
+  penaltyCount?: number
 }
 
 export interface ApiCategoryStat {
@@ -95,5 +97,7 @@ export interface ApiSummary {
   totalActive: number
   totalClosed: number
   districtCount: number
+  /** 全市有稽查紀錄的立案班數（舊快取可能缺省） */
+  withPenalty?: number
   fromCache?: boolean
 }

@@ -6,7 +6,8 @@ export interface Review {
   id: string
   schoolId: string
   identity: ReviewIdentity
-  period: ReviewPeriod
+  /** 舊資料可能仍有；新投稿不再收集 */
+  period?: ReviewPeriod
   date: string
   rating: number
   content: string
@@ -67,7 +68,6 @@ export interface DistrictStat {
 export interface ReviewSubmitPayload {
   schoolId: string
   identity: ReviewIdentity
-  period: ReviewPeriod
   rating: number
   content: string
   tags: string[]

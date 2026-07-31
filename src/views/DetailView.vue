@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import EmptyState from '@/components/common/EmptyState.vue'
 import PenaltyBadge from '@/components/common/PenaltyBadge.vue'
 import RatingStars from '@/components/common/RatingStars.vue'
 import Sk from '@/components/common/Sk.vue'
@@ -17,14 +16,15 @@ import { useReviews } from '@/composables/useReviews'
 import { useSchoolStore } from '@/stores/schoolStore'
 import { goBackOrHome } from '@/utils/navigation'
 import { shareOrCopy } from '@/utils/share'
-import { ArrowLeft, ExternalLink, Heart, MapPin, MapPinOff, MessageSquareText, Navigation, Phone, Share2, ShieldCheck } from 'lucide-vue-next'
+import { ArrowLeft, Columns2, ExternalLink, Heart, MapPin, MapPinOff, MessageSquareText, Navigation, Phone, Share2, ShieldCheck } from 'lucide-vue-next'
 import { computed, onMounted, ref, watch } from 'vue'
 import { RouterLink, useRouter } from 'vue-router'
 
 const props = defineProps<{ id: string }>()
 const router = useRouter()
-const { isFavorite, toggleFavorite } = useFavorites()
+const { favorites, isFavorite, toggleFavorite, otherFavoriteId } = useFavorites()
 const store = useSchoolStore()
+const comparePeerName = ref<string | null>(null)
 
 const {
   displayReviews,
@@ -35,6 +35,7 @@ const {
 } = useReviews(() => props.id)
 
 const showReviewSheet = ref(false)
+const reviewDraftRating = ref(0)
 const showToast = ref(false)
 const toastMessage = ref('感謝分享！審核通過後會公開顯示')
 const toastTone = ref<'success' | 'info'>('success')
@@ -66,8 +67,8 @@ usePageSeo(computed(() => {
   const desc = [
     `查看${name}的立案狀態、地址電話`,
     hasPenalty ? '、稽查紀錄' : '',
-    '與家長真實評價。',
-    district ? `位於台中市${district}。` : '',
+    '與就讀經驗。',
+    district ? `位於${district}。` : '',
     categories ? `補習類別：${categories}。` : '',
   ].filter(Boolean).join('')
   return {
@@ -112,10 +113,14 @@ function openGoogleMaps() {
   window.open(url, '_blank', 'noopener,noreferrer')
 }
 
-function openReviewSheet() {
+function openReviewSheet(prefillRating = 0) {
   if (!school.value) return
+  reviewDraftRating.value = prefillRating > 0 ? prefillRating : 0
   showReviewSheet.value = true
-  trackEvent('open_review_sheet', { school_id: school.value.id })
+  trackEvent('open_review_sheet', {
+    school_id: school.value.id,
+    prefill_rating: prefillRating || undefined,
+  })
 }
 
 function onSubmitted() {
@@ -127,7 +132,7 @@ async function shareSchool() {
   if (!school.value) return
   const url = `${SITE_URL}/schools/${school.value.id}`
   const title = `${school.value.name} | 補亦樂乎`
-  const text = `查看${school.value.name}的立案狀態、地址與家長評價`
+  const text = `查看${school.value.name}的立案狀態、地址與就讀經驗`
   const result = await shareOrCopy({ title, text, url })
   if (result === 'shared' || result === 'copied') {
     trackEvent('share_school', { school_id: school.value.id, method: result })
@@ -135,10 +140,46 @@ async function shareSchool() {
   if (result === 'copied') flashToast('連結已複製，可貼到 LINE、Facebook')
   else if (result === 'failed') flashToast('分享失敗，請手動複製網址', 'info')
 }
+
+/** 已收藏恰好一間「別間」時，引導收藏目前這間並對照 */
+const showCompareCta = computed(() => {
+  if (!school.value) return false
+  if (favorites.value.length !== 1) return false
+  return favorites.value[0] !== school.value.id
+})
+
+async function refreshComparePeer() {
+  const peerId = otherFavoriteId(props.id)
+  if (!peerId) {
+    comparePeerName.value = null
+    return
+  }
+  const peer = await store.ensureCached(peerId)
+  comparePeerName.value = peer?.name ?? '已收藏的班'
+}
+
+watch(
+  () => [props.id, favorites.value.join(',')],
+  () => {
+    void refreshComparePeer()
+  },
+  { immediate: true },
+)
+
+function goCompareWithPeer() {
+  const peerId = otherFavoriteId(props.id)
+  if (!peerId || !school.value) return
+  if (!isFavorite(school.value.id)) toggleFavorite(school.value.id)
+  trackEvent('compare_schools', { school_a: peerId, school_b: school.value.id, source: 'detail' })
+  void router.push({ name: 'favorites', query: { a: peerId, b: school.value.id } })
+}
 </script>
 
 <template>
-  <div class="mx-auto min-h-screen max-w-2xl pb-10">
+  <div
+    class="mx-auto min-h-screen max-w-2xl"
+    style="padding-bottom: max(5rem, calc(2.5rem + env(safe-area-inset-bottom, 0px)))"
+  >
     <!-- 頂部操作列 -->
     <div class="flex items-center justify-between px-4 py-3">
       <button
@@ -185,13 +226,13 @@ async function shareSchool() {
       <p class="text-xs font-medium tracking-wide text-gray-400">404</p>
       <h1 class="font-heading text-xl font-bold text-gray-900">找不到這間補習班</h1>
       <p class="max-w-sm text-sm leading-relaxed text-gray-500">
-        網址可能打錯，或這筆資料已移除。回首頁繼續找台中補習班吧。
+        網址可能打錯，或這筆資料已移除。可回找班繼續查詢。
       </p>
       <RouterLink
-        to="/"
+        to="/find"
         class="mt-2 rounded-md bg-primary-700 px-4 py-2 text-sm font-medium text-white hover:bg-primary-800"
       >
-        回首頁找補習班
+        回找班
       </RouterLink>
     </div>
 
@@ -254,6 +295,26 @@ async function shareSchool() {
           </div>
         </div>
 
+        <div
+          v-if="showCompareCta"
+          class="flex flex-col gap-2 rounded-md border border-primary-200 bg-primary-50/50 px-3 py-3 sm:flex-row sm:items-center sm:justify-between"
+          data-testid="detail-compare-cta"
+        >
+          <p class="text-sm leading-relaxed text-gray-700">
+            已收藏
+            <span class="font-medium text-gray-900">{{ comparePeerName ?? '一間班' }}</span>
+            。可與此班對照公開資料。
+          </p>
+          <button
+            type="button"
+            class="inline-flex min-h-10 shrink-0 items-center justify-center gap-1.5 rounded-md bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800"
+            @click="goCompareWithPeer"
+          >
+            <Columns2 :size="16" />
+            {{ isFavorite(school.id) ? '開始對照' : '收藏並對照' }}
+          </button>
+        </div>
+
         <div class="space-y-2 text-sm text-gray-700">
           <div class="flex items-start gap-2">
             <MapPin :size="16" class="mt-0.5 shrink-0 text-gray-400" />
@@ -276,14 +337,30 @@ async function shareSchool() {
           </p>
         </div>
 
-        <!-- 地圖 + 導航按鈕 -->
+        <!-- 地圖 + 導航按鈕（勿套用首頁台中 maxBounds，否則外縣市圖釘會被裁掉） -->
         <div class="overflow-hidden rounded-md border border-gray-200">
-          <div class="h-48">
-            <MapPanel :schools="[school]" :selected-id="school.id" :interactive="false" />
+          <!-- 靜態小地圖關閉 pointer-events，避免吃掉頁面上下滑動 -->
+          <div class="h-48 touch-pan-y pointer-events-none">
+            <MapPanel
+              v-if="school.lat && school.lng"
+              :key="school.id"
+              :schools="[school]"
+              :selected-id="school.id"
+              :interactive="false"
+              :center="{ lng: school.lng, lat: school.lat }"
+              :max-bounds="null"
+            />
+            <div
+              v-else
+              class="flex h-full flex-col items-center justify-center gap-1 bg-gray-50 px-4 text-center text-xs text-gray-500"
+            >
+              <MapPinOff :size="20" class="text-gray-400" />
+              尚無精確座標，請用下方導航依地址開啟地圖
+            </div>
           </div>
           <button
             type="button"
-            class="flex w-full items-center justify-center gap-2 border-t border-gray-200 bg-gray-50 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary-700"
+            class="pointer-events-auto flex w-full items-center justify-center gap-2 border-t border-gray-200 bg-gray-50 py-2.5 text-sm font-medium text-gray-700 transition-colors hover:bg-gray-100 hover:text-primary-700"
             @click="openGoogleMaps"
           >
             <Navigation :size="15" />
@@ -293,10 +370,10 @@ async function shareSchool() {
 
         <PenaltyBadge v-if="school.penalties.length" :penalties="school.penalties" />
 
-        <!-- 評價區 -->
-        <div class="rounded-md border border-gray-200 p-4">
-          <div class="flex items-start justify-between gap-3">
-            <h2 class="font-heading text-base font-bold text-gray-900">家長評價</h2>
+        <!-- 評價區（空狀態採 Google／App Store 主流：點星開寫評價） -->
+        <div class="overflow-hidden rounded-xl border border-gray-200 bg-white">
+          <div class="flex items-start justify-between gap-3 px-4 pt-4">
+            <h2 class="font-heading text-base font-bold text-gray-900">就讀經驗</h2>
             <RouterLink
               to="/more/review-policy"
               class="shrink-0 text-xs font-medium text-primary-700 hover:underline"
@@ -305,55 +382,91 @@ async function shareSchool() {
             </RouterLink>
           </div>
 
-          <div class="mt-2 flex flex-wrap items-center gap-2">
-            <span class="flex items-center gap-1 text-lg font-bold text-gray-900">
-              <RatingStars :rating="averageRating" :size="18" />
-              {{ averageRating > 0 ? averageRating : '尚無評分' }}
-            </span>
-            <span v-if="reviewCount > 0" class="text-sm text-gray-400">
-              {{ reviewCount }} 則通過審核
-            </span>
+          <template v-if="isLoadingReviews">
+            <p class="px-4 py-6 text-sm text-gray-400">評價載入中…</p>
+          </template>
+
+          <!-- 尚無評價：邀請卡 -->
+          <div v-else-if="!displayReviews.length" class="px-4 pb-4 pt-2">
+            <div class="rounded-xl bg-gradient-to-b from-primary-50/80 to-white px-4 py-5 text-center ring-1 ring-primary-100">
+              <p class="text-sm font-semibold text-gray-900">成為第一位分享經驗的人</p>
+              <p class="mt-1 text-xs leading-relaxed text-gray-500">
+                你的親身經驗，能幫下一位更快判斷適不適合
+              </p>
+
+              <div class="mt-4 flex flex-col items-center gap-2">
+                <p class="text-[11px] font-medium text-gray-400">點一下星等開始</p>
+                <RatingStars
+                  :rating="0"
+                  :size="32"
+                  interactive
+                  tone="amber"
+                  @update:rating="openReviewSheet"
+                />
+              </div>
+
+              <button
+                type="button"
+                class="mt-4 inline-flex min-h-11 w-full items-center justify-center gap-2 rounded-xl bg-primary-700 px-4 text-sm font-semibold text-white hover:bg-primary-800"
+                @click="openReviewSheet()"
+              >
+                <MessageSquareText :size="16" stroke-width="1.75" />
+                分享就讀經驗
+              </button>
+              <p class="mt-2 text-[11px] text-gray-400">匿名投稿・通過審核後才公開</p>
+            </div>
           </div>
 
-          <div v-if="reviewTags.length" class="mt-3 flex flex-wrap gap-1.5">
-            <Tag v-for="tag in reviewTags" :key="tag" active>{{ tag }}</Tag>
+          <!-- 已有評價 -->
+          <div v-else class="px-4 pb-4 pt-2">
+            <div class="flex flex-wrap items-center gap-2">
+              <span class="flex items-center gap-1 text-lg font-bold text-gray-900">
+                <RatingStars :rating="averageRating" :size="18" />
+                {{ averageRating }}
+              </span>
+              <span class="text-sm text-gray-400">{{ reviewCount }} 則通過審核</span>
+            </div>
+
+            <div v-if="reviewTags.length" class="mt-3 flex flex-wrap gap-1.5">
+              <Tag v-for="tag in reviewTags" :key="tag" active>{{ tag }}</Tag>
+            </div>
+
+            <div class="mt-4 space-y-4">
+              <ReviewCard
+                v-for="review in displayReviews"
+                :key="review.id"
+                :review="review"
+              />
+            </div>
+
+            <button
+              type="button"
+              class="mt-4 flex w-full min-h-12 items-center justify-between gap-3 rounded-xl bg-primary-50 px-4 text-left ring-1 ring-primary-100 hover:bg-primary-50/80"
+              @click="openReviewSheet()"
+            >
+              <span class="min-w-0">
+                <span class="block text-sm font-semibold text-gray-900">也寫一則你的經驗</span>
+                <span class="mt-0.5 block text-xs text-gray-500">幫助其他人做決定</span>
+              </span>
+              <span class="shrink-0 rounded-lg bg-primary-700 px-3 py-1.5 text-xs font-semibold text-white">
+                去寫
+              </span>
+            </button>
           </div>
 
-          <div class="mt-4 space-y-4">
-            <p v-if="isLoadingReviews" class="text-sm text-gray-400">評價載入中…</p>
-            <EmptyState
-              v-else-if="!displayReviews.length"
-              compact
-              :icon="MessageSquareText"
-              title="還沒有評價"
-              description="歡迎分享就讀經驗；投稿後經人工審核才會公開。"
-            />
-            <ReviewCard
-              v-for="review in displayReviews"
-              :key="review.id"
-              :review="review"
-            />
-          </div>
-
-          <div class="mt-4 flex w-fit items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 py-1.5 text-xs text-gray-500">
-            <ShieldCheck :size="14" class="shrink-0 text-primary-600" />
-            依標準審核、來源可考，僅刊登經審核的親身經驗投稿
+          <div class="flex items-center gap-1.5 border-t border-gray-100 bg-gray-50 px-4 py-2.5 text-[11px] text-gray-500">
+            <ShieldCheck :size="13" class="shrink-0 text-primary-600" />
+            僅刊登經審核的親身經驗，正負面都保留
           </div>
         </div>
-
-        <button
-          type="button"
-          class="min-h-11 w-full rounded-md bg-primary-700 py-2.5 font-medium text-white hover:bg-primary-800"
-          @click="openReviewSheet"
-        >
-          分享您的經驗
-        </button>
       </div>
     </Transition>
 
     <ReviewSheet
       v-if="showReviewSheet && school"
+      :key="`${school.id}-${reviewDraftRating}`"
       :school="school"
+      :initial-rating="reviewDraftRating"
       @close="showReviewSheet = false"
       @submitted="onSubmitted"
     />

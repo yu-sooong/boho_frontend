@@ -8,6 +8,32 @@ export interface SharePayload {
 
 export type ShareResult = 'shared' | 'copied' | 'cancelled' | 'failed'
 
+export async function copyText(text: string): Promise<boolean> {
+  try {
+    if (navigator.clipboard?.writeText) {
+      await navigator.clipboard.writeText(text)
+      return true
+    }
+  } catch {
+    // fall through
+  }
+
+  try {
+    const input = document.createElement('input')
+    input.value = text
+    input.setAttribute('readonly', '')
+    input.style.position = 'fixed'
+    input.style.opacity = '0'
+    document.body.appendChild(input)
+    input.select()
+    const ok = document.execCommand('copy')
+    document.body.removeChild(input)
+    return ok
+  } catch {
+    return false
+  }
+}
+
 export async function shareOrCopy(payload: SharePayload): Promise<ShareResult> {
   const { title, text, url } = payload
 
@@ -22,28 +48,6 @@ export async function shareOrCopy(payload: SharePayload): Promise<ShareResult> {
     }
   }
 
-  try {
-    if (navigator.clipboard?.writeText) {
-      await navigator.clipboard.writeText(url)
-      return 'copied'
-    }
-  } catch {
-    // fall through
-  }
-
-  // 舊瀏覽器：選取隱藏 input 複製
-  try {
-    const input = document.createElement('input')
-    input.value = url
-    input.setAttribute('readonly', '')
-    input.style.position = 'fixed'
-    input.style.opacity = '0'
-    document.body.appendChild(input)
-    input.select()
-    const ok = document.execCommand('copy')
-    document.body.removeChild(input)
-    return ok ? 'copied' : 'failed'
-  } catch {
-    return 'failed'
-  }
+  const ok = await copyText(url)
+  return ok ? 'copied' : 'failed'
 }

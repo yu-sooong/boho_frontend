@@ -1,4 +1,5 @@
 import { createRouter, createWebHistory } from 'vue-router'
+import { useCityStore } from '@/stores/cityStore'
 
 /** Cloudflare Build 設 VITE_MAINTENANCE_MODE=true 後重建，依賴 API 的頁面導向維運頁 */
 const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
@@ -6,6 +7,7 @@ const MAINTENANCE_MODE = import.meta.env.VITE_MAINTENANCE_MODE === 'true'
 /** 維運期間仍可開的靜態／說明頁 */
 const MAINTENANCE_ALLOWED = new Set([
   'maintenance',
+  'dashboard',
   'more',
   'about',
   'contact',
@@ -13,6 +15,7 @@ const MAINTENANCE_ALLOWED = new Set([
   'terms',
   'review-policy',
   'guide',
+  'guide-article',
   'ai-pick',
   'not-found',
 ])
@@ -22,6 +25,11 @@ const router = createRouter({
   routes: [
     {
       path: '/',
+      name: 'dashboard',
+      component: () => import('@/views/DashboardView.vue'),
+    },
+    {
+      path: '/find',
       name: 'home',
       component: () => import('@/views/HomeView.vue'),
     },
@@ -44,11 +52,12 @@ const router = createRouter({
     {
       path: '/guide',
       name: 'guide',
-      component: () => import('@/views/ComingSoonView.vue'),
-      props: {
-        title: '文章專區',
-        description: '選班指南與實用文章還在準備中，開放後會放在這裡。',
-      },
+      component: () => import('@/views/GuideListView.vue'),
+    },
+    {
+      path: '/guide/:slug',
+      name: 'guide-article',
+      component: () => import('@/views/GuideArticleView.vue'),
     },
     {
       path: '/ai-pick',
@@ -56,7 +65,8 @@ const router = createRouter({
       component: () => import('@/views/ComingSoonView.vue'),
       props: {
         title: 'AI 選班',
-        description: '依需求推薦適合補習班的功能還在準備中，敬請稍後再來。',
+        description:
+          '依需求收斂條件、整理候選選項的功能還在規劃中（非正式聊天 AI）。目前請先用找班篩選與文章專區的選班指南。',
       },
     },
     {
@@ -108,9 +118,19 @@ const router = createRouter({
 })
 
 router.beforeEach((to) => {
-  if (!MAINTENANCE_MODE) return true
-  if (to.name && MAINTENANCE_ALLOWED.has(String(to.name))) return true
-  return { name: 'maintenance', replace: true }
+  if (MAINTENANCE_MODE) {
+    if (to.name && MAINTENANCE_ALLOWED.has(String(to.name))) return true
+    return { name: 'maintenance', replace: true }
+  }
+
+  // 找班／情報需已選縣市；否則回導覽（不預先打 schools API）
+  if (to.name === 'home' || to.name === 'district-stats') {
+    const cityStore = useCityStore()
+    if (!cityStore.cityId) {
+      return { name: 'dashboard', query: { needCity: '1' }, replace: true }
+    }
+  }
+  return true
 })
 
 export default router

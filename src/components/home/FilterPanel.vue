@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import { ShieldAlert, X } from 'lucide-vue-next'
-import { ref, watch } from 'vue'
+import { computed, ref, watch } from 'vue'
 
 const props = defineProps<{
   open: boolean
@@ -9,16 +9,27 @@ const props = defineProps<{
   onlyHasPenalty?: boolean
   districts?: string[]
   categories?: string[]
+  /** 依草稿條件預覽結果數 */
+  previewCount?: number
 }>()
 
 const emit = defineEmits<{
   close: []
   apply: [{ districts: string[]; categories: string[]; onlyHasPenalty: boolean }]
+  'draft-change': [{ districts: string[]; categories: string[]; onlyHasPenalty: boolean }]
 }>()
 
 const localDistricts = ref<string[]>([])
 const localCategories = ref<string[]>([])
 const localOnlyHasPenalty = ref(false)
+
+function emitDraft() {
+  emit('draft-change', {
+    districts: [...localDistricts.value],
+    categories: [...localCategories.value],
+    onlyHasPenalty: localOnlyHasPenalty.value,
+  })
+}
 
 watch(
   () => props.open,
@@ -27,9 +38,17 @@ watch(
       localDistricts.value = [...(props.selectedDistricts ?? [])]
       localCategories.value = [...(props.selectedCategories ?? [])]
       localOnlyHasPenalty.value = props.onlyHasPenalty ?? false
+      emitDraft()
     }
   },
 )
+
+watch([localDistricts, localCategories, localOnlyHasPenalty], emitDraft, { deep: true })
+
+const previewLabel = computed(() => {
+  if (props.previewCount == null) return '套用篩選'
+  return `套用（約 ${props.previewCount.toLocaleString()} 間）`
+})
 
 function toggleDistrict(d: string) {
   const idx = localDistricts.value.indexOf(d)
@@ -124,9 +143,9 @@ const activeCount = () =>
               />
             </span>
             <span class="min-w-0 flex-1">
-              <span class="block text-sm font-medium">僅顯示有稽查紀錄</span>
+              <span class="block text-sm font-medium">僅顯示有公開稽查紀錄</span>
               <span class="mt-0.5 block text-xs text-gray-500">
-                近幾年曾出現在主管機關稽查／違規公告者
+                近幾年曾出現在主管機關公開稽查／違規公告者
               </span>
             </span>
             <span
@@ -215,9 +234,10 @@ const activeCount = () =>
           <button
             type="button"
             class="flex-1 rounded-md bg-primary-700 py-2.5 text-sm font-medium text-white hover:bg-primary-800"
+            data-testid="filter-apply"
             @click="apply"
           >
-            套用篩選
+            {{ previewLabel }}
           </button>
         </div>
       </div>

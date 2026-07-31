@@ -15,7 +15,7 @@ usePageSeo({
 const sections = [
   {
     title: '一、服務說明',
-    content: `補亦樂乎（以下稱「本平台」）提供台中市補習班公開資訊查詢、地圖瀏覽、地區統計與使用者評價等功能，目的是協助家長與學生取得可核對的資訊。\n\n本平台展示之內容僅供參考，不構成對任何補習班之推薦、背書、保證或投資／就學建議。是否報名、參觀或簽訂契約，請您自行判斷並承擔相關風險。`,
+    content: `補亦樂乎（以下稱「本平台」）提供目前已開放縣市（含台中、新北、高雄）補習班公開資訊查詢、地圖瀏覽、地區統計與使用者評價等功能，目的是協助家長與學生取得可核對的資訊。\n\n本平台展示之內容僅供參考，不構成對任何補習班之推薦、背書、保證或投資／就學建議。是否報名、參觀或簽訂契約，請您自行判斷並承擔相關風險。`,
     open: true,
     highlight: null as string | null,
   },
@@ -92,7 +92,7 @@ function toggle(i: number) {
 
       <div class="mx-auto max-w-xl px-4 py-5 md:px-6">
         <div class="mb-5 flex items-center justify-between">
-          <p class="text-xs text-gray-500">最後更新：2026 年 7 月 21 日</p>
+          <p class="text-xs text-gray-500">最後更新：2026 年 7 月 31 日</p>
           <span
             class="rounded-full border px-2.5 py-0.5 text-[11px] font-medium"
             style="border-color: #99d4cc; color: #0f766e; background-color: #f0fdfb"

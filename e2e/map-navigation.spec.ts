@@ -3,6 +3,7 @@
  * 驗證 A（不重開預覽）+ B（mobileMode 持久化）
  */
 import { test, expect, type Page } from '@playwright/test'
+import { seedCityOnboarding } from './helpers/seedCity'
 
 type E2eState = {
   showPreview: boolean
@@ -34,7 +35,9 @@ declare global {
 }
 
 async function waitForHomeReady(page: Page) {
-  await page.goto('/')
+  await seedCityOnboarding(page)
+  await page.goto('/find')
+  await expect(page).toHaveURL(/\/find/)
   await page.waitForFunction(() => !!window.__e2eHome, null, { timeout: 20_000 })
   await page.waitForFunction(
     () => (window.__e2eHome?.availableDistricts().length ?? 0) > 0,
@@ -119,7 +122,7 @@ test.describe('桌面：地圖預覽 → 詳情 → 返回', () => {
     await waitForMapReadyAfterBack(page)
 
     await expect(page.getByText('← 返回列表')).toHaveCount(0)
-    await expect(page.getByText(/共\s*[\d,]+\s*筆結果/)).toBeVisible()
+    await expect(page.getByText(/共\s*[\d,]+\s*間補習班/)).toBeVisible()
   })
 })
 

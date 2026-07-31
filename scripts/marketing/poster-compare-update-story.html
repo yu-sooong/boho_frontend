@@ -1,0 +1,314 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8" />
+  <title>補亦樂乎 · 兩班對照更版（直式）</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Noto+Sans+TC:wght@600;700;900&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --ink: #0f172a;
+      --muted: #475569;
+      --teal: #0f766e;
+      --card: #ffffff;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      width: 1080px;
+      height: 1920px;
+      overflow: hidden;
+      font-family: "Noto Sans TC", "PingFang TC", "Microsoft JhengHei", sans-serif;
+      color: var(--ink);
+      background:
+        radial-gradient(ellipse 70% 40% at 50% 18%, rgba(16, 185, 129, 0.2), transparent 60%),
+        radial-gradient(ellipse 60% 35% at 80% 80%, rgba(15, 118, 110, 0.12), transparent 55%),
+        linear-gradient(180deg, #f0fdfa 0%, #f8fafc 45%, #ecfdf5 100%);
+      position: relative;
+    }
+    .scene {
+      position: absolute;
+      inset: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 120px 72px;
+      text-align: center;
+      opacity: 0;
+    }
+    .s1 { animation: scene1 9s ease-in-out infinite; }
+    .s2 { animation: scene2 9s ease-in-out infinite; }
+    .s3 { animation: scene3 9s ease-in-out infinite; }
+    .s4 { animation: scene4 9s ease-in-out infinite; }
+    @keyframes scene1 {
+      0%, 2% { opacity: 0; transform: translateY(16px); }
+      6%, 20% { opacity: 1; transform: translateY(0); }
+      26%, 100% { opacity: 0; transform: translateY(-12px); }
+    }
+    @keyframes scene2 {
+      0%, 22% { opacity: 0; transform: translateY(16px); }
+      28%, 48% { opacity: 1; transform: translateY(0); }
+      54%, 100% { opacity: 0; transform: translateY(-12px); }
+    }
+    @keyframes scene3 {
+      0%, 50% { opacity: 0; transform: translateY(16px); }
+      56%, 74% { opacity: 1; transform: translateY(0); }
+      80%, 100% { opacity: 0; transform: translateY(-12px); }
+    }
+    @keyframes scene4 {
+      0%, 76% { opacity: 0; transform: translateY(16px); }
+      82%, 96% { opacity: 1; transform: translateY(0); }
+      100% { opacity: 0; transform: translateY(-8px); }
+    }
+    .logo { width: 140px; height: 140px; margin-bottom: 28px; }
+    .brand { font-size: 64px; font-weight: 900; letter-spacing: -0.03em; }
+    .eyebrow {
+      margin-top: 16px;
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--teal);
+      letter-spacing: 0.04em;
+    }
+    .headline {
+      font-size: 60px;
+      font-weight: 900;
+      letter-spacing: -0.03em;
+      line-height: 1.2;
+      text-wrap: balance;
+    }
+    .sub {
+      margin-top: 22px;
+      font-size: 30px;
+      font-weight: 600;
+      color: var(--muted);
+      line-height: 1.45;
+      max-width: 860px;
+    }
+    .city-col {
+      display: flex;
+      flex-direction: column;
+      gap: 18px;
+      margin-top: 48px;
+      width: 100%;
+      max-width: 720px;
+    }
+    .city-pill {
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.14);
+      border-radius: 24px;
+      padding: 28px 32px;
+      box-shadow: 0 14px 36px rgba(15, 118, 110, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      text-align: left;
+    }
+    .city-pill .name {
+      font-size: 36px;
+      font-weight: 900;
+    }
+    .live {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 22px;
+      font-weight: 800;
+      color: #047857;
+      background: #ecfdf5;
+      border: 1px solid #a7f3d0;
+      border-radius: 999px;
+      padding: 8px 16px;
+    }
+    .live::before {
+      content: "";
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #10b981;
+      animation: blink 1.2s ease-in-out infinite;
+    }
+    @keyframes blink {
+      0%, 100% { opacity: 0.35; }
+      50% { opacity: 1; }
+    }
+    .compare {
+      margin-top: 36px;
+      width: 100%;
+      max-width: 900px;
+      background: var(--card);
+      border: 1px solid rgba(15, 118, 110, 0.12);
+      border-radius: 28px;
+      overflow: hidden;
+      box-shadow: 0 18px 48px rgba(15, 118, 110, 0.12);
+      text-align: left;
+    }
+    .compare-head {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      background: #f8fafc;
+      border-bottom: 1px solid #e2e8f0;
+      padding: 22px 26px;
+    }
+    .compare-head .label {
+      font-size: 22px;
+      font-weight: 700;
+      color: #64748b;
+    }
+    .compare-head .school {
+      font-size: 28px;
+      font-weight: 900;
+    }
+    .compare-row {
+      display: grid;
+      grid-template-columns: 1.1fr 1fr 1fr;
+      padding: 20px 26px;
+      border-bottom: 1px solid #f1f5f9;
+      font-size: 26px;
+      font-weight: 700;
+      align-items: center;
+    }
+    .compare-row:last-child { border-bottom: none; }
+    .compare-row .k { color: #64748b; font-size: 22px; }
+    .ok { color: #047857; }
+    .ok::before { content: "✓ "; font-weight: 900; }
+    .muted-cell { color: #334155; }
+    .steps {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      margin-top: 40px;
+      width: 100%;
+      max-width: 560px;
+    }
+    .step {
+      font-size: 28px;
+      font-weight: 800;
+      color: var(--teal);
+      background: #fff;
+      border: 1px solid rgba(15, 118, 110, 0.16);
+      border-radius: 999px;
+      padding: 18px 28px;
+      box-shadow: 0 8px 24px rgba(15, 118, 110, 0.08);
+    }
+    .cta {
+      margin-top: 40px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-height: 84px;
+      padding: 0 48px;
+      border-radius: 22px;
+      background: var(--teal);
+      color: #fff;
+      font-size: 34px;
+      font-weight: 900;
+      box-shadow: 0 16px 40px rgba(15, 118, 110, 0.28);
+    }
+    .url {
+      margin-top: 22px;
+      font-size: 30px;
+      font-weight: 800;
+      color: var(--muted);
+    }
+    .note {
+      margin-top: 16px;
+      font-size: 24px;
+      font-weight: 600;
+      color: #64748b;
+    }
+    .footer-brand {
+      position: absolute;
+      bottom: 72px;
+      left: 0;
+      right: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 14px;
+      z-index: 2;
+    }
+    .footer-brand svg { width: 44px; height: 44px; }
+    .footer-brand span {
+      font-size: 26px;
+      font-weight: 800;
+      color: #334155;
+    }
+  </style>
+</head>
+<body>
+  <section class="scene s1">
+    <svg class="logo" viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    <h1 class="brand">補亦樂乎</h1>
+    <p class="eyebrow">補習班情報地圖</p>
+    <p class="sub">不評分、不排名，把公開資料攤開給你看</p>
+  </section>
+
+  <section class="scene s2">
+    <p class="eyebrow" style="margin-bottom:16px">更新上線</p>
+    <h2 class="headline">台中・新北・高雄<br>都能查了</h2>
+    <div class="city-col">
+      <div class="city-pill"><span class="name">台中市</span><span class="live">開放查詢</span></div>
+      <div class="city-pill"><span class="name">新北市</span><span class="live">開放查詢</span></div>
+      <div class="city-pill"><span class="name">高雄市</span><span class="live">開放查詢</span></div>
+    </div>
+  </section>
+
+  <section class="scene s3">
+    <h2 class="headline">收藏兩間<br>並排對照</h2>
+    <p class="sub">立案、地區、電話、公開稽查一次看清楚</p>
+    <div class="compare" aria-hidden="true">
+      <div class="compare-head">
+        <div class="label">對照項目</div>
+        <div class="school">甲美語</div>
+        <div class="school">乙文理</div>
+      </div>
+      <div class="compare-row">
+        <div class="k">立案狀態</div>
+        <div class="ok">在業</div>
+        <div class="ok">在業</div>
+      </div>
+      <div class="compare-row">
+        <div class="k">行政區</div>
+        <div class="muted-cell">西屯區</div>
+        <div class="muted-cell">南屯區</div>
+      </div>
+      <div class="compare-row">
+        <div class="k">公開稽查</div>
+        <div class="muted-cell">無紀錄</div>
+        <div class="muted-cell">有 1 筆</div>
+      </div>
+    </div>
+  </section>
+
+  <section class="scene s4">
+    <h2 class="headline">再分享給家人<br>一起看</h2>
+    <p class="sub">對照連結可直接傳</p>
+    <div class="steps">
+      <span class="step">1　收藏兩間班</span>
+      <span class="step">2　並排對照公開資料</span>
+      <span class="step">3　分享連結給家人</span>
+    </div>
+    <div class="cta">打開補亦樂乎</div>
+    <div class="url">boho.yujii.app</div>
+    <p class="note">不業配・不賣置頂・公開資料優先</p>
+  </section>
+
+  <div class="footer-brand" aria-hidden="true">
+    <svg viewBox="0 0 100 100" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path d="M 18,8 L 38,8 L 38,48 A 30,30 0 0,1 18,62 Z" fill="#1e293b"/>
+      <path d="M 38,22 L 54,22 A 34,34 0 0,1 88,56 A 34,34 0 0,1 54,90 L 38,90 L 38,68 L 54,68 A 12,12 0 0,0 66,56 A 12,12 0 0,0 54,44 L 38,44 Z" fill="#1e293b"/>
+      <path d="M 26,74 L 30,74 L 30,90 L 26,90 Z" fill="#10b981"/>
+      <path d="M 27,74 C 14,74 10,63 12,56 C 18,56 26,64 27,74 Z" fill="#10b981"/>
+      <path d="M 29,72 C 42,65 46,52 45,44 C 35,46 28,59 29,72 Z" fill="#10b981"/>
+    </svg>
+    <span>補亦樂乎</span>
+  </div>
+</body>
+</html>

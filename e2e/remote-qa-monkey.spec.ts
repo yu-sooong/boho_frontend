@@ -63,16 +63,6 @@ async function attachMonitors(page: Page) {
   return { issues, apiCalls }
 }
 
-async function skipTourBeforeLoad(page: Page) {
-  await page.addInitScript(() => {
-    try {
-      localStorage.setItem('buyu:homeTourDone', '1')
-    } catch {
-      /* ignore */
-    }
-  })
-}
-
 async function dismissOverlays(page: Page) {
   await page.locator('.loading-screen').waitFor({ state: 'detached', timeout: 15_000 }).catch(() => {})
   await page.evaluate(() => {
@@ -98,7 +88,6 @@ test.describe('遠端 QA：補亦樂乎預覽站', () => {
 
   test('首頁載入、打 API、列表可見', async ({ page }) => {
     const mon = await attachMonitors(page)
-    await skipTourBeforeLoad(page)
     const allResp = page.waitForResponse(
       (r) => r.url().includes('/api/schools/all') && r.ok(),
       { timeout: 60_000 },
@@ -119,7 +108,6 @@ test.describe('遠端 QA：補亦樂乎預覽站', () => {
 
   test('詳情頁可開啟且評價區塊可載入', async ({ page }) => {
     const mon = await attachMonitors(page)
-    await skipTourBeforeLoad(page)
     const id = '6a58a402e59598a1d93824b8'
 
     // A) 硬載入詳情：應打 GET /schools/:id + reviews
@@ -172,7 +160,6 @@ test.describe('遠端 QA：補亦樂乎預覽站', () => {
 
   test('行政區統計頁載入', async ({ page }) => {
     const mon = await attachMonitors(page)
-    await skipTourBeforeLoad(page)
     const summary = page.waitForResponse(
       (r) => r.url().includes('/api/stats/summary') && r.ok(),
       { timeout: 30_000 },
@@ -190,7 +177,6 @@ test.describe('遠端 QA：補亦樂乎預覽站', () => {
 
   test('靜態／Coming Soon／404／Admin 未授權', async ({ page }) => {
     const mon = await attachMonitors(page)
-    await skipTourBeforeLoad(page)
     for (const path of ['/guide', '/ai-pick', '/more', '/more/about', '/more/contact', '/favorites']) {
       await page.goto(path, { waitUntil: 'domcontentloaded' })
       await dismissOverlays(page)
@@ -221,7 +207,6 @@ test.describe('遠端 QA：補亦樂乎預覽站', () => {
 
   test('Monkey：隨機點擊導覽 40 秒', async ({ page }) => {
     const mon = await attachMonitors(page)
-    await skipTourBeforeLoad(page)
     const allResp = page.waitForResponse(
       (r) => r.url().includes('/api/schools/all') && r.ok(),
       { timeout: 60_000 },

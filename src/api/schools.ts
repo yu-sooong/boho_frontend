@@ -7,6 +7,8 @@ import type {
 } from './types'
 
 export interface SearchParams {
+  /** MongoDB city 欄位：台中市／新北市／高雄市 */
+  city?: string
   keyword?: string
   district?: string
   category?: string
@@ -15,12 +17,13 @@ export interface SearchParams {
   hasPenalty?: boolean
   page?: number
   limit?: number
-  lat?: number   // 使用者緯度（有值時後端依距離排序）
-  lng?: number   // 使用者經度
+  lat?: number
+  lng?: number
 }
 
 export function searchSchools(params: SearchParams = {}) {
   return apiGet<ApiSearchResult>('/schools/search', {
+    city: params.city,
     keyword: params.keyword,
     district: params.district,
     category: params.category,
@@ -37,8 +40,8 @@ export function getSchoolDetail(id: string) {
   return apiGet<ApiSchoolDetail & { fromCache?: boolean }>(`/schools/${id}`)
 }
 
-export function getMapPins() {
-  return apiGet<ApiMapResult>('/schools/map')
+export function getMapPins(city?: string) {
+  return apiGet<ApiMapResult>('/schools/map', { city })
 }
 
 export function getNearbySchools(
@@ -46,19 +49,23 @@ export function getNearbySchools(
   lat: number,
   radius?: number,
   limit?: number,
+  city?: string,
 ) {
-  return apiGet<ApiSearchResult>('/schools/nearby', { lng, lat, radius, limit })
+  return apiGet<ApiSearchResult>('/schools/nearby', { lng, lat, radius, limit, city })
 }
 
-export function getDistricts() {
-  return apiGet<{ data: string[]; fromCache?: boolean }>('/schools/districts')
+export function getDistricts(city?: string) {
+  return apiGet<{ data: string[]; fromCache?: boolean }>('/schools/districts', { city })
 }
 
-export function getCategories() {
-  return apiGet<{ data: string[]; fromCache?: boolean }>('/schools/categories')
+export function getCategories(city?: string) {
+  return apiGet<{ data: string[]; fromCache?: boolean }>('/schools/categories', { city })
 }
 
-/** 一次載入所有活躍學校精簡列（前端做篩選/排序/距離計算） */
-export function getAllSchools() {
-  return apiGet<{ data: ApiSchoolListItem[]; total: number; fromCache?: boolean }>('/schools/all')
+/** 一次載入該縣市活躍學校精簡列（前端做篩選／排序／距離） */
+export function getAllSchools(city?: string) {
+  return apiGet<{ data: ApiSchoolListItem[]; total: number; fromCache?: boolean }>(
+    '/schools/all',
+    { city },
+  )
 }

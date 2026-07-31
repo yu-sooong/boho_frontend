@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import AppHeader from '@/components/layout/AppHeader.vue'
 import BottomTabBar from '@/components/layout/BottomTabBar.vue'
+import CitySelect from '@/components/common/CitySelect.vue'
 import EmptyState from '@/components/common/EmptyState.vue'
 import MapPanel from '@/components/home/MapPanel.vue'
 import SchoolCard from '@/components/home/SchoolCard.vue'
@@ -11,25 +12,60 @@ import Sk from '@/components/common/Sk.vue'
 import { trackEvent } from '@/analytics'
 import { SITE_URL } from '@/config/site'
 import { useDebounceFn } from '@/composables/useDebounce'
-import { maybeStartHomeTour } from '@/composables/useHomeTour'
+import { useFavorites } from '@/composables/useFavorites'
 import { usePageSeo } from '@/composables/usePageSeo'
+import { useCityStore } from '@/stores/cityStore'
 import { useSchoolStore } from '@/stores/schoolStore'
-import { MapPin, Search } from 'lucide-vue-next'
+import { Columns2, MapPin, Search } from 'lucide-vue-next'
 import { computed, nextTick, onMounted, ref, watch } from 'vue'
-import { useRouter } from 'vue-router'
+import { useRoute, useRouter } from 'vue-router'
 
-usePageSeo({
-  title: '補亦樂乎 | 台中市補習班地圖查詢・公開資訊・家長評價',
-  description:
-    '免費查詢台中市近 3,000 間立案補習班，地圖找班、立案狀態核查、稽查紀錄查詢、真實家長評價，報名前先查，讓孩子上到有保障的補習班。',
-  ogTitle: '補亦樂乎 | 台中市補習班地圖查詢',
-  ogDescription:
-    '免費查詢台中市近 3,000 間立案補習班，地圖找班、立案狀態核查、稽查紀錄查詢、真實家長評價，報名前先查。',
-  ogUrl: `${SITE_URL}/`,
-})
+const cityStore = useCityStore()
+const { favoriteCount } = useFavorites()
+
+usePageSeo(computed(() => {
+  const cityName = cityStore.city?.name ?? '台中市'
+  return {
+    title: `${cityName}補習班地圖查詢・公開資訊 | 補亦樂乎`,
+    description:
+      `查詢${cityName}立案補習班：地圖找班、立案狀態與公開稽查紀錄（以主管機關公告為準）。`,
+    ogTitle: `補亦樂乎 | ${cityName}補習班地圖查詢`,
+    ogDescription:
+      `查詢${cityName}立案補習班：地圖找班、立案狀態與公開稽查紀錄（以主管機關公告為準）。`,
+    ogUrl: `${SITE_URL}/find`,
+  }
+}))
 
 const store = useSchoolStore()
 const router = useRouter()
+const route = useRoute()
+
+/** 導覽／情報帶入的 query（只套用一次，避免打多餘 API） */
+function applyFindQuery() {
+  const district = typeof route.query.district === 'string' ? route.query.district.trim() : ''
+  const category = typeof route.query.category === 'string' ? route.query.category.trim() : ''
+  const penalty = route.query.penalty === '1' || route.query.penalty === 'true'
+  if (district) store.setDistricts([district])
+  if (category) store.setCategories([category])
+  if (penalty) store.setOnlyHasPenalty(true)
+  if (route.query.from === 'stats') {
+    store.setMobileMode('map')
+  }
+}
+
+/** 從地區情報進來時，地圖區提供返回 */
+const fromStats = computed(() => route.query.from === 'stats')
+const statsReturnDistrict = computed(() => {
+  const id = route.query.statsDistrict
+  return typeof id === 'string' && id ? id : undefined
+})
+
+function backToStats() {
+  void router.push({
+    name: 'district-stats',
+    query: statsReturnDistrict.value ? { district: statsReturnDistrict.value } : undefined,
+  })
+}
 
 const scrolled = ref(false)
 const filterOpen = ref(false)
@@ -115,6 +151,30 @@ const mapSchools = computed(() =>
   hasActiveFilter.value ? store.filteredMapPins : store.allMapPins,
 )
 
+/** 有列表結果但地圖無針 */
+const listWithoutMapPins = computed(
+  () =>
+    !store.isLoadingAll &&
+    store.totalFiltered > 0 &&
+    mapSchools.value.length === 0,
+)
+
+const keywordDraft = computed(() => store.keyword.trim())
+const keywordTooShort = computed(
+  () => keywordDraft.value.length > 0 && keywordDraft.value.length < store.KEYWORD_MIN_LEN,
+)
+const keywordActive = computed(() => keywordDraft.value.length >= store.KEYWORD_MIN_LEN)
+
+/** 篩選面板草稿預覽筆數 */
+const filterPreviewCount = ref<number | null>(null)
+function onFilterDraftChange(draft: {
+  districts: string[]
+  categories: string[]
+  onlyHasPenalty: boolean
+}) {
+  filterPreviewCount.value = store.countMatching(draft)
+}
+
 // ── 篩選變動時 fitBounds ─────────────────────────────────────────────────────
 watch(
   [
@@ -131,7 +191,10 @@ watch(
     if (hasActiveFilter.value && store.filteredMapPins.length > 0) {
       nextTick(() => mapPanelRef.value?.fitToSchools(store.filteredMapPins))
     } else if (!hasActiveFilter.value) {
-      nextTick(() => mapPanelRef.value?.flyToUser())
+      // 清除篩選：優先本人附近（須在縣市內），否則縣市中心
+      nextTick(() => {
+        if (!mapPanelRef.value?.flyToUser()) mapPanelRef.value?.resetToCity()
+      })
     }
   },
   { deep: true },
@@ -140,22 +203,11 @@ watch(
 /**
  * 地圖就緒後還原視角（從詳情頁返回時 MapPanel 會重建）
  * A：不重開預覽面板；僅還原地圖視角與圖釘高亮
- * 優先：已選補習班座標 → 篩選結果 → 使用者附近
+ * 優先：已選補習班 → 篩選結果 → 縣市內定位 → 縣市中心
  */
 function onMapReady() {
   mapReady.value = true
   restoreMapView()
-  tryStartTour()
-}
-
-function tryStartTour() {
-  maybeStartHomeTour({
-    ensureListMode: () => {
-      if (store.mobileMode === 'map') store.setMobileMode('list')
-    },
-    ensureMapVisible: () => {},
-    isReady: () => !store.isLoadingAll && store.allSchools.length > 0,
-  })
 }
 
 function restoreMapView() {
@@ -177,14 +229,24 @@ function restoreMapView() {
     return
   }
 
-  if (store.userLat != null && store.userLng != null) {
-    nextTick(() => mapPanelRef.value?.flyToUser())
-  }
+  nextTick(() => {
+    // 定位若在目前縣市外，不可 flyToUser（會被 maxBounds 夾到邊界山區）
+    if (!mapPanelRef.value?.flyToUser()) mapPanelRef.value?.resetToCity()
+  })
 }
 
+watch(
+  () => cityStore.cityId,
+  () => {
+    showPreview.value = false
+    store.setSelectedSchool(null)
+    listSheetOpen.value = false
+  },
+)
+
 onMounted(() => {
-  store.loadAll()
-  tryStartTour()
+  applyFindQuery()
+  void store.loadAll()
 
   // DEV / e2e：暴露 UI 狀態，方便 Playwright 重現導航問題（不進 production build 行為）
   if (import.meta.env.DEV) {
@@ -290,6 +352,21 @@ function onFilterApply({
               class="z-10 shrink-0 border-b px-4 py-3 transition-colors"
               :class="scrolled ? 'border-gray-200/60 bg-white/80 backdrop-blur-md' : 'border-transparent bg-white'"
             >
+              <CitySelect class="mb-2" analytics-source="find" />
+              <button
+                v-if="fromStats"
+                type="button"
+                class="mb-2 flex w-full min-h-10 items-center gap-1.5 rounded-md border border-gray-200 bg-gray-50 px-3 text-left text-sm font-medium text-gray-800 hover:bg-gray-100"
+                @click="backToStats"
+              >
+                ← 回地區情報
+              </button>
+              <p
+                v-if="!store.isLoadingAll && store.totalFiltered > 0 && store.allMapPins.length === 0"
+                class="mb-2 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs leading-relaxed text-sky-900"
+              >
+                {{ cityStore.city?.name }}列表已可查詢；地圖座標尚在補齊，請先用列表瀏覽。
+              </p>
               <SearchFilterBar
                 :keyword="store.keyword"
                 :district="store.selectedDistricts.join(',')"
@@ -298,22 +375,39 @@ function onFilterApply({
                 @update:keyword="store.setKeyword"
                 @open-filter="filterOpen = true"
               />
+              <p
+                v-if="keywordTooShort"
+                class="mt-1.5 text-xs text-amber-800"
+                data-testid="keyword-hint"
+              >
+                請再輸入至少 {{ store.KEYWORD_MIN_LEN - keywordDraft.length }} 個字才開始搜尋
+              </p>
 
               <div
                 v-if="
-                  store.selectedDistricts.length ||
-                  store.selectedCategories.length ||
-                  store.onlyHasPenalty
+                  keywordActive ||
+                    store.selectedDistricts.length ||
+                    store.selectedCategories.length ||
+                    store.onlyHasPenalty
                 "
                 class="mt-2 flex flex-wrap gap-1.5"
               >
+                <button
+                  v-if="keywordActive"
+                  type="button"
+                  class="inline-flex items-center gap-1 rounded-md bg-gray-100 px-2.5 py-1 text-xs font-medium text-gray-700 hover:bg-gray-200"
+                  data-testid="keyword-chip"
+                  @click="store.setKeyword('')"
+                >
+                  「{{ keywordDraft }}」 ✕
+                </button>
                 <button
                   v-if="store.onlyHasPenalty"
                   type="button"
                   class="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50 px-2.5 py-1 text-xs font-medium text-amber-800 hover:bg-amber-100"
                   @click="store.setOnlyHasPenalty(false)"
                 >
-                  有稽查紀錄 ✕
+                  公開稽查紀錄 ✕
                 </button>
                 <button
                   v-for="d in store.selectedDistricts"
@@ -336,6 +430,7 @@ function onFilterApply({
                 <button
                   type="button"
                   class="text-xs text-gray-500 hover:text-gray-700"
+                  data-testid="clear-filters"
                   @click="store.clearFilters()"
                 >
                   全部清除
@@ -343,7 +438,14 @@ function onFilterApply({
               </div>
 
               <p
-                v-if="!store.isLoadingAll && store.totalFiltered > 0"
+                v-if="listWithoutMapPins"
+                class="mt-1.5 rounded-md border border-sky-200 bg-sky-50 px-2.5 py-1.5 text-xs leading-relaxed text-sky-900"
+                data-testid="no-map-pins-hint"
+              >
+                目前結果尚無地圖座標，請用列表查看。
+              </p>
+              <p
+                v-else-if="!store.isLoadingAll && store.totalFiltered > 0"
                 class="mt-1.5 text-xs text-gray-500"
               >
                 共 {{ store.totalFiltered.toLocaleString() }} 間補習班
@@ -355,6 +457,21 @@ function onFilterApply({
               class="flex-1 space-y-3 overflow-y-auto p-4"
               @scroll="onListScroll"
             >
+              <div
+                v-if="favoriteCount === 1"
+                class="flex items-start gap-2 rounded-md border border-gray-200 bg-gray-50 px-3 py-2.5 text-xs leading-relaxed text-gray-600"
+                data-testid="find-compare-nudge"
+              >
+                <Columns2 :size="14" class="mt-0.5 shrink-0 text-primary-700" />
+                <p>
+                  已收藏 1 間・再收藏一間可在
+                  <RouterLink to="/favorites" class="font-medium text-primary-700 hover:underline">
+                    我的收藏
+                  </RouterLink>
+                  對照公開資料
+                </p>
+              </div>
+
               <div
                 v-if="store.loadError"
                 class="rounded-md border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-800"
@@ -391,7 +508,17 @@ function onFilterApply({
                     :icon="Search"
                     title="找不到符合條件的補習班"
                     description="試試換個關鍵字，或清除行政區／類別篩選後再搜尋。"
-                  />
+                  >
+                    <button
+                      v-if="hasActiveFilter"
+                      type="button"
+                      class="mt-1 rounded-md bg-primary-700 px-3 py-2 text-sm font-medium text-white hover:bg-primary-800"
+                      data-testid="empty-clear-filters"
+                      @click="store.clearFilters()"
+                    >
+                      清除篩選
+                    </button>
+                  </EmptyState>
 
                   <SchoolCard
                     v-for="school in store.displaySchools"
@@ -429,17 +556,31 @@ function onFilterApply({
         :class="store.mobileMode === 'map' ? 'block' : 'hidden md:block'"
       >
         <MapPanel
+          :key="cityStore.cityId ?? 'none'"
           ref="mapPanelRef"
           :schools="mapSchools"
           :selected-id="store.selectedSchoolId"
           :user-lat="store.userLat"
           :user-lng="store.userLng"
+          :center="cityStore.city?.center"
+          :max-bounds="cityStore.city?.maxBounds"
           @select="onMapSelect"
           @located="(coords) => store.setUserCoords(coords.lat, coords.lng)"
           @ready="onMapReady"
         >
           <!-- 手機地圖模式：頂部搜尋列 + 已選篩選 chips -->
           <div class="absolute inset-x-0 top-0 z-20 p-4 md:hidden">
+            <div class="mb-2 rounded-md border border-white/50 bg-white/85 px-3 py-1.5 backdrop-blur-md">
+              <CitySelect variant="inline" analytics-source="find_map" />
+            </div>
+            <button
+              v-if="fromStats"
+              type="button"
+              class="mb-2 flex w-full min-h-10 items-center gap-1.5 rounded-md border border-white/60 bg-white/90 px-3 text-left text-sm font-medium text-gray-800 shadow-sm backdrop-blur-md"
+              @click="backToStats"
+            >
+              ← 回地區情報
+            </button>
             <SearchFilterBar
               floating
               show-back
@@ -447,13 +588,20 @@ function onFilterApply({
               :district="store.selectedDistricts.join(',')"
               :category="store.selectedCategories.join(',')"
               :only-has-penalty="store.onlyHasPenalty"
-              @back="store.setMobileMode('list')"
+              @back="fromStats ? backToStats() : store.setMobileMode('list')"
               @update:keyword="store.setKeyword"
               @open-filter="filterOpen = true"
             />
             <!-- 已選 chips（地圖浮層版，半透明） -->
+            <p
+              v-if="keywordTooShort"
+              class="mt-1.5 rounded-md bg-amber-50/90 px-2.5 py-1 text-xs text-amber-900 backdrop-blur-sm"
+            >
+              請再輸入至少 {{ store.KEYWORD_MIN_LEN - keywordDraft.length }} 個字才開始搜尋
+            </p>
             <div
               v-if="
+                keywordActive ||
                 store.selectedDistricts.length ||
                 store.selectedCategories.length ||
                 store.onlyHasPenalty
@@ -461,12 +609,20 @@ function onFilterApply({
               class="mt-2 flex flex-wrap gap-1.5"
             >
               <button
+                v-if="keywordActive"
+                type="button"
+                class="inline-flex items-center gap-1 rounded-md bg-white/90 px-2.5 py-1 text-xs font-medium text-gray-700 backdrop-blur-sm"
+                @click="store.setKeyword('')"
+              >
+                「{{ keywordDraft }}」 ✕
+              </button>
+              <button
                 v-if="store.onlyHasPenalty"
                 type="button"
                 class="inline-flex items-center gap-1 rounded-md border border-amber-200 bg-amber-50/90 px-2.5 py-1 text-xs font-medium text-amber-800 backdrop-blur-sm"
                 @click="store.setOnlyHasPenalty(false)"
               >
-                有稽查紀錄 ✕
+                公開稽查紀錄 ✕
               </button>
               <button
                 v-for="d in store.selectedDistricts"
@@ -494,6 +650,12 @@ function onFilterApply({
                 全部清除
               </button>
             </div>
+            <p
+              v-if="listWithoutMapPins"
+              class="mt-2 rounded-md border border-sky-200 bg-sky-50/95 px-2.5 py-1.5 text-xs text-sky-900 backdrop-blur-sm"
+            >
+              目前結果尚無地圖座標，請改看列表。
+            </p>
           </div>
 
           <!-- 手機地圖模式：底部預覽 Sheet（點圖釘後出現） -->
@@ -525,11 +687,12 @@ function onFilterApply({
             <div
               v-if="!listSheetOpen"
               class="pointer-events-none absolute inset-x-0 z-30 flex justify-center md:hidden"
-              style="bottom: max(1.5rem, calc(env(safe-area-inset-bottom, 0px) + 0.75rem))"
+              style="bottom: max(5.25rem, calc(env(safe-area-inset-bottom, 0px) + 4.25rem))"
             >
               <button
                 type="button"
                 class="pointer-events-auto flex items-center gap-2 rounded-full bg-white px-5 py-2.5 text-sm font-semibold text-gray-800 shadow-lg active:bg-gray-50"
+                data-testid="map-open-list"
                 @click="listSheetOpen = true"
               >
                 <span class="inline-block h-2.5 w-2.5 rounded-full bg-primary-600" />
@@ -572,7 +735,16 @@ function onFilterApply({
                       :icon="Search"
                       title="找不到符合條件的補習班"
                       description="試試調整關鍵字或篩選條件"
-                    />
+                    >
+                      <button
+                        v-if="hasActiveFilter"
+                        type="button"
+                        class="rounded-md bg-primary-700 px-3 py-1.5 text-xs font-medium text-white"
+                        @click="store.clearFilters()"
+                      >
+                        清除篩選
+                      </button>
+                    </EmptyState>
                     <SchoolCard
                       v-for="school in store.displaySchools"
                       :key="school.id"
@@ -598,7 +770,7 @@ function onFilterApply({
 
     <!-- 手機切換地圖按鈕 -->
     <button
-      v-if="store.mobileMode === 'list'"
+      v-if="cityStore.isLive && store.mobileMode === 'list'"
       type="button"
       data-tour="tour-map-btn"
       class="fixed bottom-20 right-4 z-20 flex items-center gap-1.5 rounded-full bg-primary-700 px-4 py-3 text-sm font-medium text-white shadow-lg md:hidden"
@@ -608,16 +780,20 @@ function onFilterApply({
       地圖
     </button>
 
-    <BottomTabBar v-if="store.mobileMode === 'list'" />
+    <!-- 地圖模式也保留底欄，避免無法切到導覽／情報／更多 -->
+    <BottomTabBar data-testid="bottom-tab-bar" />
 
     <FilterPanel
+      v-if="cityStore.isLive"
       :open="filterOpen"
       :selected-districts="store.selectedDistricts"
       :selected-categories="store.selectedCategories"
       :only-has-penalty="store.onlyHasPenalty"
       :districts="store.districts"
       :categories="store.categories"
+      :preview-count="filterPreviewCount ?? undefined"
       @close="filterOpen = false"
+      @draft-change="onFilterDraftChange"
       @apply="onFilterApply"
     />
   </div>
