@@ -433,8 +433,16 @@ function fitToSchools(schools: School[] = props.schools) {
   map.fitBounds(bounds, { padding: 64, maxZoom: 14, minZoom: 11, duration: 600 })
 }
 
+/**
+ * 進找班／清除篩選的預設縮放：維持在 clusterMaxZoom 之下，先看數量圈而非滿版圖釘。
+ * 使用者要看單點可自行放大或點叢集。
+ */
+const DEFAULT_OVERVIEW_ZOOM = 12
+/** 定位後略近一點，但仍低於 clusterMaxZoom，避免一進來就解散成密密麻麻 */
+const LOCATE_OVERVIEW_ZOOM = 12.5
+
 /** 回到目前縣市中心（找班預設視角；避免 GPS 在範圍外被 maxBounds 夾到山區） */
-function resetToCity(zoom = 12) {
+function resetToCity(zoom = DEFAULT_OVERVIEW_ZOOM) {
   if (!map) return
   map.flyTo({
     center: [props.center.lng, props.center.lat],
@@ -451,7 +459,7 @@ function flyToUser(): boolean {
   if (!lastUserCoords || !map) return false
   const [lng, lat] = lastUserCoords
   if (!isInsideBounds(lng, lat)) return false
-  map.flyTo({ center: lastUserCoords, zoom: 14, duration: 800 })
+  map.flyTo({ center: lastUserCoords, zoom: LOCATE_OVERVIEW_ZOOM, duration: 800 })
   return true
 }
 
@@ -512,7 +520,7 @@ async function onLocate(fly = true, opts: { quiet?: boolean } = {}) {
   placeUserMarker(coords.lng, coords.lat)
   // 定位在目前縣市範圍外：仍放標記，但不飛出 maxBounds
   if (fly && isInsideBounds(coords.lng, coords.lat)) {
-    map.flyTo({ center: [coords.lng, coords.lat], zoom: 14, duration: 1200 })
+    map.flyTo({ center: [coords.lng, coords.lat], zoom: LOCATE_OVERVIEW_ZOOM, duration: 1200 })
   } else if (fly && !isInsideBounds(coords.lng, coords.lat)) {
     showLocateHint('目前位置在查詢縣市外，已標示但不移動地圖')
   }
@@ -576,13 +584,14 @@ onMounted(() => {
       await loadAllPinImages(map)
 
       // 詳情小地圖（非互動／單點）關閉叢集，避免圖釘被吃掉
+      // clusterMaxZoom 15：overview／定位（~12–12.5）維持圈圈；再放大才變個別針
       const enableCluster = props.interactive && props.schools.length > 1
       map.addSource('schools', {
         type: 'geojson',
         data: toGeoJSON(props.schools),
         cluster: enableCluster,
-        clusterMaxZoom: 14,
-        clusterRadius: 40,
+        clusterMaxZoom: 15,
+        clusterRadius: 50,
         clusterProperties: {
           // 叢集內有稽查紀錄的點數（>0 則叢集外圈改 amber）
           penalty_sum: ['+', ['get', 'hasPenalty']],
